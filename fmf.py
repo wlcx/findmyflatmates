@@ -44,7 +44,7 @@ class LoginHandler(BaseHandler):
         elif self.get_argument("action") == "signup":
             hashpw = bcrypt.hashpw(self.get_argument("password"), bcrypt.gensalt())
             key = ''.join(random.choice(string.ascii_letters + string.digits) for x in range(42))
-            cursor.execute("INSERT INTO users (key, username, hash) VALUES (%s, %s, %s)", tuple(key, self.get_argument("email"), hashpw))
+            cursor.execute("INSERT INTO users (key, username, hash) VALUES (%s, %s, %s)", tuple([key, self.get_argument("email"), hashpw]))
             msgtext = """
             Hi Flatmate!
             Here's that link to get you started. Copy and paste this into your browser: 

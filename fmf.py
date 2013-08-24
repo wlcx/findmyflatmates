@@ -32,7 +32,7 @@ class LoginHandler(BaseHandler):
         if self.current_user:
             self.redirect('/', permanent=False)
             return
-        self.render('login.html', authfail=False)
+        self.render('login.html', alert=False)
 
     def post(self):
         if self.get_argument("action") == 'login':

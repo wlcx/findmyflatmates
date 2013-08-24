@@ -94,5 +94,5 @@ if __name__ == '__main__':
         (r"/static/(.*)", tornado.web.StaticFileHandler, dict(path = STATIC_PATH)),
     ], **settings)
 
-    application.listen(os.environ["port"])
+    application.listen(os.environ["PORT"])
     tornado.ioloop.IOLoop.instance().start()

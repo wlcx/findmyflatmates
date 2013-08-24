@@ -67,7 +67,7 @@ class MainHandler(BaseHandler):
 
 if __name__ == '__main__':
     settings = {
-        "cookie_secret": "kH6JeVi4ZYl9+iKn/S/Lu7lyyMU=",
+        "cookie_secret": os.environ["COOKIE_SECRET"],
         "debug": True,
         "login_url": "/login",
     }
@@ -84,7 +84,7 @@ if __name__ == '__main__':
     )
     
     cursor = conn.cursor()
-    s = sendgrid.Sendgrid('samuel@willcockses.com', password, secure=True)
+    s = sendgrid.Sendgrid(os.environ["SENDGRID_USER"], os.environ["SENDGRID_PASS"], secure=True)
 
     application = tornado.web.Application([
         (r"/login", LoginHandler),

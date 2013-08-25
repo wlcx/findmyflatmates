@@ -13,10 +13,11 @@ class BaseHandler(tornado.web.RequestHandler):
 class VerifyHandler(tornado.web.RequestHandler):
     def get(self):
         if self.get_argument("key"):
-            cursor.execute("SELECT username, hash, verificationid FROM verifications WHERE key=%s", (self.get_argument("key"),))
+            cursor.execute("SELECT username, hash FROM verify WHERE key=%s", (self.get_argument("key"),))
             verification = cursor.fetchone()
             if verification:
                 cursor.execute("INSERT INTO users (username, hash) VALUES (%s, %s)", (verification[0], verification[1]))
+                conn.commit()
                 self.set_secure_cookie("FMF_auth", verification[1])
                 self.redirect('/', permanent=False)
                 return
@@ -44,13 +45,16 @@ class LoginHandler(BaseHandler):
         elif self.get_argument("action") == "signup":
             hashpw = bcrypt.hashpw(self.get_argument("password"), bcrypt.gensalt())
             key = ''.join(random.choice(string.ascii_letters + string.digits) for x in range(42))
-            cursor.execute("INSERT INTO verify (key, username, hash) VALUES (%s, %s, %s)", (key, self.get_argument("email"), hashpw))
+            cursor.execute("INSERT INTO verify (key, username, hash) VALUES (%s, %s, %s);", (key, self.get_argument("email"), hashpw))
+            conn.commit()
             msgtext = """
             Hi Flatmate!
             Here's that link to get you started. Copy and paste this into your browser: 
             findmyflatmates.co.uk/verify?key={0}
             """.format(key)
             message = sendgrid.Message("noreply@findmyflatmates.co.uk", "Welcome to FMF!", msgtext)
+            message.add_to(self.get_argument('email') + '@york.ac.uk')
+            #s.smtp.send(message)
             self.render('login.html', alert=True, alerttype='alert-success', alertmsg='We sent you an email to verify your account.')
 
 class LogoutHandler(BaseHandler):
@@ -62,7 +66,7 @@ class LogoutHandler(BaseHandler):
 class MainHandler(BaseHandler):
     @tornado.web.authenticated
     def get(self):
-        self.render('index.html')
+        pass
 
 
 if __name__ == '__main__':

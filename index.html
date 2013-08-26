@@ -11,31 +11,14 @@
     <script type="text/javascript">
       $(document).ready(function () {
         $.ajaxSetup({cache: false});
-        
-        function displayAlert(type, content) {
-          $(".container").prepend(
-            "<div class=\"alert "+ type + " fade in\">"
-            + content
-            + "<button type=\"button\" class=\"close\" data-dismiss=\"alert\">x</button></div>")
-        };
-
-        $("#btn-notifications-settings").click(function() {
-          $(".view-notifications-main").hide();
-          $(".view-notifications-settings").show();
-        });
-
-        $("#btn-notifications-save").click(function() {
-          var save = $.post('/pushover', { userkey: $("#apikey").val()}, function(data) {
+        $("#btn-about-save").click(function() {
+          $.getJSON('buildings', {"buildingcode": $("#accommodation").val(),}, function(data) {
             console.log(data);
-            displayAlert("alert-success", "Saved!");
-            $(".view-notifications-settings").hide();
-            $(".view-notifications-main").show();
-          })
-          .fail(displayAlert("alert-danger", "Uh-oh!"));
-        });
-
-        $("#btn-about-edit").click(function() {
-          
+            $("#flathouse").empty();
+            for(var i=1;i<data.numflats+1;i++) {
+              $("#flathouse").append("<option value=\"" + i +"\">" + i +"</option>")
+            };
+          });
         });
       });
     </script>
@@ -50,14 +33,7 @@
               <h3 class="panel-title">Flatmates</h3>
             </div>
             <div class="panel-body">
-              {% if flatmates %}
-              <h2>Your Flatmates</h2>
-              {% for flatmate in flatmates %}
-              <li>{{ escape(flatmate.name) }}</li>
-              {% end %}
-              {% else %}
-              <h2>You're the first! :D share this site and let's find us some flatmates!<h2>
-              {% end %}
+              
             </div>
           </div>
         </div>
@@ -79,13 +55,10 @@
         <div class="col-lg-4">
           <div class="panel panel-default">
             <div class="panel-heading">
-              <h3 class="panel-title">Messages</h3>
+              <h3 class="panel-title">Derp</h3>
             </div>
             <div class="panel-body">
               <strong>Derp</strong>
-            </div>
-            <div class="panel-footer">
-              <input type="text">
             </div>
           </div>
         </div>
@@ -104,10 +77,38 @@
             <h5>Fill in as much or as little as you want. But this is the whole point of doing this after all ;)</h5>
             <form>
               <div class="form-group">
-                <label for="firstname">First Name</label>
-                <input id="firstname" class="form-control" type="text">
-                <label for="lastname">Last Name</label>
-                <input id="lastname" class="form-control" type="text">
+                <label for="names">Name</label>
+                <div id="names" class="form-inline">
+                  <div class="form-group">
+                    <label for="firstname" class="sr-only">First Name</label>
+                    <input id="firstname" class="form-control" type="text" placeholder="Firstname">
+                  </div>
+                  <div class="form-group">
+                    <label for="lastname" class="sr-only">Last Name</label>
+                    <input id="lastname" class="form-control" type="text" placeholder="Lastname">
+                  </div>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="college">College</label>
+                <select class="form-control">
+                  <option value="1">Alcuin</option>
+                  <option value="2">Derwent</option>
+                  <option value="3">Goodricke</option>
+                  <option value="4">Halifax</option>
+                  <option value="5">James</option>
+                  <option value="6">Langwith</option>
+                  <option value="7">Vanbrugh</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="accommodation">Room Number</label>
+                <input id="accommodation" class="form-control" type="text" placeholder="XXX/X/XXX">
+              </div>
+              <div class="form-group">
+                <label for="arse">Flat/House Number</label>
+                <select id="flathouse" class="form-control">
+                </select>
               </div>
               <div class="form-group">
                 <label for="facebook">Facebook URL</label>
@@ -124,7 +125,7 @@
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            <button type="button" class="btn btn-primary">Save changes</button>
+            <button id="btn-about-save" type="button" class="btn btn-primary">Save changes</button>
           </div>
         </div><!-- /.modal-content -->
       </div><!-- /.modal-dialog -->

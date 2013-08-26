@@ -1,5 +1,6 @@
 import tornado.ioloop
 import tornado.web
+import tornado.escape
 import os
 import psycopg2, urlparse
 import bcrypt
@@ -12,22 +13,26 @@ class BaseHandler(tornado.web.RequestHandler):
 
 class VerifyHandler(tornado.web.RequestHandler):
     def get(self):
-        if self.get_argument("key"):
-            cursor.execute("SELECT username, hash FROM verify WHERE key=%s", (self.get_argument("key"),))
-            verification = cursor.fetchone()
-            if verification:
-                cursor.execute("INSERT INTO users (username, hash) VALUES (%s, %s)", (verification[0], verification[1]))
+        try:
+            self.get_argument("key")
+            v = get_verify(self.get_argument("key"))
+            if v:
+                cursor.execute("INSERT INTO users (username, hash) VALUES (%s, %s)", (v["username"], v["hash"]))
                 conn.commit()
                 self.set_secure_cookie("FMF_auth", verification[1])
                 self.redirect('/', permanent=False)
                 return
-        self.write("That doesn't seem to be a valid verification key. Sorry :/")
+        except tornado.web.MissingArgumentError:        
+            self.render('login.html', alert=True, alerttype='alert-danger', alertmsg="That didn't seem to be a valid verification key. Try signing up again.")
+
 
 class LoginHandler(BaseHandler):
     def check_credentials(self, username, password):
-        cursor.execute("SELECT hash FROM users WHERE username=%s", (username,))
-        hash = cursor.fetchone()[0]
-        return bcrypt.hashpw(password, hash) == hash
+        hash = get_hash_by_username(username)
+        if (hash):
+            return bcrypt.hashpw(password, hash) == hash
+        else:
+            return False
     
     def get(self):
         if self.current_user:
@@ -41,7 +46,7 @@ class LoginHandler(BaseHandler):
                 self.set_secure_cookie("FMF_auth", self.get_argument("email"))
                 self.redirect('/', permanent=False)
             else:
-                self.render('login.html', alert=True, alerttype='alert-danger', alertmsg="<strong>Nope.</strong> Incorrect login details")
+                self.render('login.html', alert=True, alerttype='alert-danger', alertmsg="Incorrect login details")
         elif self.get_argument("action") == "signup":
             hashpw = bcrypt.hashpw(self.get_argument("password"), bcrypt.gensalt())
             key = ''.join(random.choice(string.ascii_letters + string.digits) for x in range(42))
@@ -63,11 +68,77 @@ class LogoutHandler(BaseHandler):
         self.clear_cookie("FMF_auth")
         self.redirect('/', permanent=False)
 
-class MainHandler(BaseHandler):
+class UserHandler(BaseHandler):
+    @tornado.web.authenticated
+    def get(self):
+        get_user_by_username()
+
+    @tornado.web.authenticated
+    def post(self):
+        #this goes into the database IN ORDER. be careful
+        user = (self.get_argument("firstname"), self.get_argument("lastname"), self.get_argument("collegeid"), self.get_argument("buildingname"), self.get_argument("room"), self.get_argument("biography"))
+
+class FlatmatesHandler(BaseHandler):
     @tornado.web.authenticated
     def get(self):
         pass
 
+class BuildingHandler(BaseHandler):
+    @tornado.web.authenticated
+    def get(self):
+        if self.get_argument("buildingcode"):
+            cursor.execute("SELECT buildingname, buildingtype, numflats FROM buildings WHERE buildingcode=%s", (self.get_argument("buildingcode"),))
+            r = cursor.fetchone()
+            if not r:
+                self.write(tornado.escape.json_encode({}))
+            else:
+                self.write(tornado.escape.json_encode(dict(zip(('buildingname', 'buildingtype', 'numflats'), r))))
+        else:
+            self.write(tornado.escape.json_encode({}))
+
+class MainHandler(BaseHandler):
+    @tornado.web.authenticated
+    def get(self):
+        self.render('index.html')
+
+def get_verify(key):
+    cursor.execute("SELECT username, hash FROM verify WHERE key=%s", (key,))
+    try: 
+        f = cursor.fetchone() 
+    except ProgrammingError as e:
+        print e
+        return {}
+    else:
+        if f:
+            return dict(zip(('username', 'hash'), f))
+        else:
+            return {}
+
+def get_hash_by_username(username):
+    cursor.execute("SELECT hash FROM users WHERE username=%s", (username,))
+    try: 
+        hash = cursor.fetchone()
+    except ProgrammingError as e:
+        print e
+        return ''
+    else:
+        if hash:
+            return hash[0]
+        else:
+            return ''
+
+def get_user_by_username(username):
+    cursor.execute("SELECT username, firstname, lastname, buildingid, room FROM users WHERE username=%s", (username,))
+    try: 
+        f = cursor.fetchone() 
+    except ProgrammingError as e:
+        print e
+        return {}
+    else:
+        if f:
+            return dict(zip(('username', 'firstname', 'lastname', 'buildingid', 'room'), f))
+        else:
+            return {}
 
 if __name__ == '__main__':
     settings = {
@@ -95,6 +166,7 @@ if __name__ == '__main__':
         (r"/logout", LogoutHandler),
         (r"/", MainHandler),
         (r"/verify", VerifyHandler),
+        (r"/buildings", BuildingHandler),
         (r"/static/(.*)", tornado.web.StaticFileHandler, dict(path = STATIC_PATH)),
     ], **settings)
 

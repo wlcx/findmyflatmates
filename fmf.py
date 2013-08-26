@@ -17,9 +17,9 @@ class VerifyHandler(tornado.web.RequestHandler):
             self.get_argument("key")
             v = get_verify(self.get_argument("key"))
             if v:
+                cursor.execute("DELETE FROM verify WHERE key=%s", (self.get_argument("key"),))
                 cursor.execute("INSERT INTO users (username, hash) VALUES (%s, %s)", (v["username"], v["hash"]))
-                conn.commit()
-                self.set_secure_cookie("FMF_auth", verification[1])
+                self.set_secure_cookie("FMF_auth", v["username"])
                 self.redirect('/', permanent=False)
                 return
         except tornado.web.MissingArgumentError:        
@@ -51,7 +51,6 @@ class LoginHandler(BaseHandler):
             hashpw = bcrypt.hashpw(self.get_argument("password"), bcrypt.gensalt())
             key = ''.join(random.choice(string.ascii_letters + string.digits) for x in range(42))
             cursor.execute("INSERT INTO verify (key, username, hash) VALUES (%s, %s, %s);", (key, self.get_argument("email"), hashpw))
-            conn.commit()
             msgtext = """
             Hi Flatmate!
             Here's that link to get you started. Copy and paste this into your browser: 
@@ -59,7 +58,7 @@ class LoginHandler(BaseHandler):
             """.format(key)
             message = sendgrid.Message("noreply@findmyflatmates.co.uk", "Welcome to FMF!", msgtext)
             message.add_to(self.get_argument('email') + '@york.ac.uk')
-            #s.smtp.send(message)
+            s.smtp.send(message)
             self.render('login.html', alert=True, alerttype='alert-success', alertmsg='We sent you an email to verify your account.')
 
 class LogoutHandler(BaseHandler):
@@ -157,6 +156,7 @@ if __name__ == '__main__':
         host=url.hostname,
         port=url.port
     )
+    conn.autocommit = True
     
     cursor = conn.cursor()
     s = sendgrid.Sendgrid(os.environ["SENDGRID_USER"], os.environ["SENDGRID_PASS"], secure=True)

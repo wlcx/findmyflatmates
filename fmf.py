@@ -22,6 +22,8 @@ class VerifyHandler(tornado.web.RequestHandler):
                 self.set_secure_cookie("FMF_auth", v["username"])
                 self.redirect('/', permanent=False)
                 return
+            else:
+                self.render('login.html', alert=True, alerttype='alert-danger', alertmsg="That didn't seem to be a valid verification key. Try signing up again.")
         except tornado.web.MissingArgumentError:        
             self.render('login.html', alert=True, alerttype='alert-danger', alertmsg="That didn't seem to be a valid verification key. Try signing up again.")
 
@@ -70,12 +72,13 @@ class LogoutHandler(BaseHandler):
 class UserHandler(BaseHandler):
     @tornado.web.authenticated
     def get(self):
-        get_user_by_username()
+        u = get_user_by_username(self.get_current_user())
+        self.write(tornado.escape.json_encode(u))
 
     @tornado.web.authenticated
     def post(self):
-        #this goes into the database IN ORDER. be careful
-        user = (self.get_argument("firstname"), self.get_argument("lastname"), self.get_argument("collegeid"), self.get_argument("buildingname"), self.get_argument("room"), self.get_argument("biography"))
+        user = {'firstname': self.get_argument("firstname"), 'lastname': self.get_argument("lastname"), 'buildingid': self.get_argument("buildingid"), 'roomnumber': self.get_argument("roomnumber"), 'biography': self.get_argument("biography")}
+        set_user_by_username(self.get_current_user(), user)
 
 class FlatmatesHandler(BaseHandler):
     @tornado.web.authenticated
@@ -85,13 +88,10 @@ class FlatmatesHandler(BaseHandler):
 class BuildingHandler(BaseHandler):
     @tornado.web.authenticated
     def get(self):
-        if self.get_argument("buildingcode"):
-            cursor.execute("SELECT buildingname, buildingtype, numflats FROM buildings WHERE buildingcode=%s", (self.get_argument("buildingcode"),))
-            r = cursor.fetchone()
-            if not r:
-                self.write(tornado.escape.json_encode({}))
-            else:
-                self.write(tornado.escape.json_encode(dict(zip(('buildingname', 'buildingtype', 'numflats'), r))))
+        if self.get_argument("roomcode"):
+            s = self.get_argument("roomcode").upper().split('/')
+            buildingcode = s[0] + '/' + s[1]
+            self.write(tornado.escape.json_encode(get_building_by_code(buildingcode)))
         else:
             self.write(tornado.escape.json_encode({}))
 
@@ -127,7 +127,7 @@ def get_hash_by_username(username):
             return ''
 
 def get_user_by_username(username):
-    cursor.execute("SELECT username, firstname, lastname, buildingid, room FROM users WHERE username=%s", (username,))
+    cursor.execute("SELECT username, firstname, lastname, buildingid, roomnumber, facebookurl, biography FROM users WHERE username=%s", (username,))
     try: 
         f = cursor.fetchone() 
     except ProgrammingError as e:
@@ -135,9 +135,46 @@ def get_user_by_username(username):
         return {}
     else:
         if f:
-            return dict(zip(('username', 'firstname', 'lastname', 'buildingid', 'room'), f))
+            u = dict(zip(('username', 'firstname', 'lastname', 'buildingid', 'roomnumber', 'facebookurl', 'biography'), f)) 
+            u['roomcode'] = get_building_by_id(u.pop('buildingid'))['buildingcode'] + '/' + str(u.pop('roomnumber'))
+            return u
         else:
             return {}
+
+def set_user_by_username(username, user):
+    r = user['roomcode'].split('/')
+    u = user['firstname'], user['lastname'], r[0] + '/' + r[1], r[2], user['facebookurl'], user['biography']
+    cursor.execute("UPDATE users SET firstname = %s, lastname = %s, buildingid = %s, roomnumber = %s, facebookurl = %s, biography = %s", u)
+
+
+def get_building_by_id(buildingid):
+    cursor.execute("SELECT buildingcode, buildingname, buildingtype, numflats FROM buildings WHERE buildingid=%s", (buildingid,))
+    try: 
+        f = cursor.fetchone() 
+    except ProgrammingError as e:
+        print e
+        return {}
+    else:
+        if f:
+            return dict(zip(('buildingcode','buildingname', 'buildingtype', 'numflats'), f)) 
+        else:
+            return {}
+
+def get_building_by_code(buildingcode):
+    cursor.execute("SELECT buildingname, buildingtype, numflats FROM buildings WHERE buildingcode=%s", (buildingcode,))
+    try: 
+        f = cursor.fetchone() 
+    except ProgrammingError as e:
+        print e
+        return {}
+    else:
+        if f:
+            return dict(zip(('buildingname', 'buildingtype', 'numflats'), f)) 
+        else:
+            return {}
+
+
+
 
 if __name__ == '__main__':
     settings = {
@@ -166,6 +203,7 @@ if __name__ == '__main__':
         (r"/logout", LogoutHandler),
         (r"/", MainHandler),
         (r"/verify", VerifyHandler),
+        (r"/users", UserHandler),
         (r"/buildings", BuildingHandler),
         (r"/static/(.*)", tornado.web.StaticFileHandler, dict(path = STATIC_PATH)),
     ], **settings)

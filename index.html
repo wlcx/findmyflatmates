@@ -12,13 +12,14 @@
       $(document).ready(function () {
         $.ajaxSetup({cache: false});
         $("#btn-about-save").click(function() {
-          $.getJSON('buildings', {"buildingcode": $("#accommodation").val(),}, function(data) {
+          $.getJSON('buildings', {"roomcode": $("#roomcode").val(),}, function(data) {
             console.log(data);
-            $("#flathouse").empty();
+            $("#flat").empty();
             for(var i=1;i<data.numflats+1;i++) {
-              $("#flathouse").append("<option value=\"" + i +"\">" + i +"</option>")
+              $("#flat").append("<option value=\"" + i +"\">" + i +"</option>")
             };
           });
+        
         });
       });
     </script>
@@ -91,7 +92,7 @@
               </div>
               <div class="form-group">
                 <label for="college">College</label>
-                <select class="form-control">
+                <select id="college" class="form-control">
                   <option value="1">Alcuin</option>
                   <option value="2">Derwent</option>
                   <option value="3">Goodricke</option>
@@ -102,24 +103,24 @@
                 </select>
               </div>
               <div class="form-group">
-                <label for="accommodation">Room Number</label>
-                <input id="accommodation" class="form-control" type="text" placeholder="XXX/X/XXX">
+                <label for="roomcode">Room Number</label>
+                <input id="roomcode" class="form-control" type="text" placeholder="XXX/X/XXX">
               </div>
               <div class="form-group">
-                <label for="arse">Flat/House Number</label>
-                <select id="flathouse" class="form-control">
+                <label for="flat">Flat Number</label>
+                <select id="flat" class="form-control">
                 </select>
               </div>
               <div class="form-group">
-                <label for="facebook">Facebook URL</label>
+                <label for="facebookurl">Facebook URL</label>
                 <div class="input-group">
                   <span class="input-group-addon">facebook.com/</span>
-                  <input id="facebook" class="form-control" type="text">
+                  <input id="facebookurl" class="form-control" type="text">
                 </div>
               </div>
               <div class="form-group">
-                <label for="about">Introduce yourself</label>
-                <textarea id="about" class="form-control" rows="4" placeholder="What's your favourite kind of tree? Do you photograph roundabouts in your spare time? Know any funny jokes about the French? Maybe you are French. That's the point of this box, I don't know"></textarea>
+                <label for="biography">Introduce yourself</label>
+                <textarea id="biography" class="form-control" rows="4" placeholder="What's your favourite kind of tree? Do you photograph roundabouts in your spare time? Know any funny jokes about the French? Maybe you are French. That's the point of this box, I don't know"></textarea>
               </div>
             </form>
           </div>

@@ -148,7 +148,7 @@ def set_user_by_username(username, user):
 
 
 def get_building_by_id(buildingid):
-    cursor.execute("SELECT buildingcode, buildingname, buildingtype, numflats FROM buildings WHERE buildingid=%s", (buildingid,))
+    cursor.execute("SELECT buildingcode, buildingname, collegeid, buildingtype, numflats FROM buildings WHERE buildingid=%s", (buildingid,))
     try: 
         f = cursor.fetchone() 
     except ProgrammingError as e:
@@ -156,12 +156,14 @@ def get_building_by_id(buildingid):
         return {}
     else:
         if f:
-            return dict(zip(('buildingcode','buildingname', 'buildingtype', 'numflats'), f)) 
+            b = dict(zip(('buildingcode','buildingname', 'collegeid', 'buildingtype', 'numflats'), f)) 
+            b['collegename'] = get_college_by_id(b.pop('collegeid'))['collegename']
+            return b
         else:
             return {}
 
 def get_building_by_code(buildingcode):
-    cursor.execute("SELECT buildingname, buildingtype, numflats FROM buildings WHERE buildingcode=%s", (buildingcode,))
+    cursor.execute("SELECT buildingname, collegeid, buildingtype, numflats FROM buildings WHERE buildingcode=%s", (buildingcode,))
     try: 
         f = cursor.fetchone() 
     except ProgrammingError as e:
@@ -169,11 +171,24 @@ def get_building_by_code(buildingcode):
         return {}
     else:
         if f:
-            return dict(zip(('buildingname', 'buildingtype', 'numflats'), f)) 
+            b = dict(zip(('buildingname', 'collegeid', 'buildingtype', 'numflats'), f)) 
+            b['collegename'] = get_college_by_id(b.pop('collegeid'))['collegename']
+            return b
         else:
             return {}
 
-
+def get_college_by_id(collegeid):
+    cursor.execute("SELECT collegename FROM colleges WHERE collegeid=%s", (collegeid,))
+    try: 
+        f = cursor.fetchone() 
+    except ProgrammingError as e:
+        print e
+        return {}
+    else:
+        if f:
+            return dict(zip(('collegename',), f)) 
+        else:
+            return {}
 
 
 if __name__ == '__main__':

@@ -127,7 +127,7 @@ def get_hash_by_username(username):
             return ''
 
 def get_user_by_username(username):
-    cursor.execute("SELECT username, firstname, lastname, buildingid, roomnumber, facebookurl, biography FROM users WHERE username=%s", (username,))
+    cursor.execute("SELECT users.username, users.firstname, users.lastname, colleges.collegename, buildings.buildingcode, users.roomnumber, users.facebookurl, users.biography FROM users, colleges, buildings WHERE users.username=%s AND colleges.collegeid=users.collegeid AND buildings.buildingid=users.buildingid", (username,))
     try: 
         f = cursor.fetchone() 
     except ProgrammingError as e:
@@ -135,8 +135,8 @@ def get_user_by_username(username):
         return {}
     else:
         if f:
-            u = dict(zip(('username', 'firstname', 'lastname', 'buildingid', 'roomnumber', 'facebookurl', 'biography'), f)) 
-            u['roomcode'] = get_building_by_id(u.pop('buildingid'))['buildingcode'] + '/' + str(u.pop('roomnumber'))
+            u = dict(zip(('username', 'firstname', 'lastname', 'collegename', 'buildingcode', 'roomnumber', 'facebookurl', 'biography'), f)) 
+            u['roomcode'] = u.pop('buildingcode') + '/' + str(u.pop('roomnumber'))
             return u
         else:
             return {}
@@ -148,7 +148,7 @@ def set_user_by_username(username, user):
 
 
 def get_building_by_id(buildingid):
-    cursor.execute("SELECT buildingcode, buildingname, collegeid, buildingtype, numflats FROM buildings WHERE buildingid=%s", (buildingid,))
+    cursor.execute("SELECT buildings.buildingname, colleges.collegename, buildings.buildingtype, buildings.numflats FROM buildings, colleges WHERE buildings.buildingid=%s AND colleges.collegeid=buildings.collegeid", (buildingid,))
     try: 
         f = cursor.fetchone() 
     except ProgrammingError as e:
@@ -156,40 +156,22 @@ def get_building_by_id(buildingid):
         return {}
     else:
         if f:
-            b = dict(zip(('buildingcode','buildingname', 'collegeid', 'buildingtype', 'numflats'), f)) 
-            b['collegename'] = get_college_by_id(b.pop('collegeid'))['collegename']
-            return b
+            return {'status': 0, 'response': dict(zip(('buildingcode','buildingname', 'collegeid', 'buildingtype', 'numflats'), f))}
         else:
-            return {}
+            return {'status': 1, 'response': {}}
 
 def get_building_by_code(buildingcode):
-    cursor.execute("SELECT buildingname, collegeid, buildingtype, numflats FROM buildings WHERE buildingcode=%s", (buildingcode,))
+    cursor.execute("SELECT buildings.buildingname, colleges.collegename, buildings.buildingtype, buildings.numflats FROM buildings, colleges WHERE buildings.buildingcode=%s AND colleges.collegeid=buildings.collegeid", (buildingcode,))
     try: 
         f = cursor.fetchone() 
     except ProgrammingError as e:
         print e
-        return {}
+        return {'status': 1, response: {}}
     else:
         if f:
-            b = dict(zip(('buildingname', 'collegeid', 'buildingtype', 'numflats'), f)) 
-            b['collegename'] = get_college_by_id(b.pop('collegeid'))['collegename']
-            return b
+            return {'status': 0, 'response': dict(zip(('buildingname', 'collegename', 'buildingtype', 'numflats'), f))}
         else:
-            return {}
-
-def get_college_by_id(collegeid):
-    cursor.execute("SELECT collegename FROM colleges WHERE collegeid=%s", (collegeid,))
-    try: 
-        f = cursor.fetchone() 
-    except ProgrammingError as e:
-        print e
-        return {}
-    else:
-        if f:
-            return dict(zip(('collegename',), f)) 
-        else:
-            return {}
-
+            return {'status': 1, 'response': {}}
 
 if __name__ == '__main__':
     settings = {

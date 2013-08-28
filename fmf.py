@@ -148,7 +148,7 @@ def set_user_by_username(username, user):
 
 
 def get_building_by_id(buildingid):
-    cursor.execute("SELECT buildings.buildingname, colleges.collegename, buildings.buildingtype, buildings.numflats FROM buildings, colleges WHERE buildings.buildingid=%s AND colleges.collegeid=buildings.collegeid", (buildingid,))
+    cursor.execute("SELECT buildings.buildingcode, buildings.buildingname, colleges.collegename, buildings.buildingtype, buildings.numflats FROM buildings, colleges WHERE buildings.buildingid=%s AND colleges.collegeid=buildings.collegeid", (buildingid,))
     try: 
         f = cursor.fetchone() 
     except ProgrammingError as e:
@@ -156,12 +156,12 @@ def get_building_by_id(buildingid):
         return {}
     else:
         if f:
-            return {'status': 0, 'response': dict(zip(('buildingcode','buildingname', 'collegeid', 'buildingtype', 'numflats'), f))}
+            return {'status': 0, 'response': dict(zip(('buildingcode','buildingname', 'collegename', 'buildingtype', 'numflats'), f))}
         else:
             return {'status': 1, 'response': {}}
 
 def get_building_by_code(buildingcode):
-    cursor.execute("SELECT buildings.buildingname, colleges.collegename, buildings.buildingtype, buildings.numflats FROM buildings, colleges WHERE buildings.buildingcode=%s AND colleges.collegeid=buildings.collegeid", (buildingcode,))
+    cursor.execute("SELECT buildings.buildingid, buildings.buildingname, colleges.collegename, buildings.buildingtype, buildings.numflats FROM buildings, colleges WHERE buildings.buildingcode=%s AND colleges.collegeid=buildings.collegeid", (buildingcode,))
     try: 
         f = cursor.fetchone() 
     except ProgrammingError as e:
@@ -169,7 +169,7 @@ def get_building_by_code(buildingcode):
         return {'status': 1, response: {}}
     else:
         if f:
-            return {'status': 0, 'response': dict(zip(('buildingname', 'collegename', 'buildingtype', 'numflats'), f))}
+            return {'status': 0, 'response': dict(zip(('buildingid', 'buildingname', 'collegename', 'buildingtype', 'numflats'), f))}
         else:
             return {'status': 1, 'response': {}}
 
@@ -202,6 +202,7 @@ if __name__ == '__main__':
         (r"/verify", VerifyHandler),
         (r"/users", UserHandler),
         (r"/buildings", BuildingHandler),
+        #(r"/flatmates", FlatmatesHandler),
         (r"/static/(.*)", tornado.web.StaticFileHandler, dict(path = STATIC_PATH)),
     ], **settings)
 

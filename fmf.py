@@ -1,11 +1,15 @@
+import os
+import datetime
 import tornado.ioloop
 import tornado.web
-import tornado.escape
-import os
+from tornado.escape import json_encode
 import psycopg2, urlparse
 import bcrypt
 import sendgrid
 import random, string
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from table_def import User, Building, College, VerificationLink
 
 class BaseHandler(tornado.web.RequestHandler):
     def get_current_user(self):
@@ -14,11 +18,14 @@ class BaseHandler(tornado.web.RequestHandler):
 class VerifyHandler(tornado.web.RequestHandler):
     def get(self):
         try:
-            self.get_argument("key")
-            v = get_verify(self.get_argument("key"))
-            if v:
-                cursor.execute("DELETE FROM verify WHERE key=%s", (self.get_argument("key"),))
-                cursor.execute("INSERT INTO users (username, hash) VALUES (%s, %s)", (v["username"], v["hash"]))
+            Session = sessionmaker(bind=engine)
+            session = Session()
+            link = session.query(VerificationLink).filter(VerificationLink.key==self.get_argument("key")).first()
+            if res:
+                validated_user = User(username=link.username, pwhash=link.pwhash)
+                session.add(validated_user)
+                session.delete(link)
+                session.commit()
                 self.set_secure_cookie("FMF_auth", v["username"])
                 self.redirect('/', permanent=False)
                 return
@@ -30,9 +37,11 @@ class VerifyHandler(tornado.web.RequestHandler):
 
 class LoginHandler(BaseHandler):
     def check_credentials(self, username, password):
-        hash = get_hash_by_username(username)
-        if (hash):
-            return bcrypt.hashpw(password, hash) == hash
+        Session = sessionmaker(bind=engine)
+        session = Session()
+        res = session.query(User).filter(User.username==username).first()
+        if (res.pwhash):
+            return bcrypt.hashpw(password, res.pwhash) == res.pwhash
         else:
             return False
     
@@ -50,9 +59,13 @@ class LoginHandler(BaseHandler):
             else:
                 self.render('login.html', alert=True, alerttype='alert-danger', alertmsg="Incorrect login details")
         elif self.get_argument("action") == "signup":
-            hashpw = bcrypt.hashpw(self.get_argument("password"), bcrypt.gensalt())
+            Session = sessionmaker(bind=engine)
+            session = Session()
+            pwhash = bcrypt.hashpw(self.get_argument("password"), bcrypt.gensalt())
             key = ''.join(random.choice(string.ascii_letters + string.digits) for x in range(42))
-            cursor.execute("INSERT INTO verify (key, username, hash) VALUES (%s, %s, %s);", (key, self.get_argument("email"), hashpw))
+            new_link = VerificationLink(key=key, username=self.get_argument("email"), pwhash=pwhash)
+            session.add(new_link)
+            session.commit()
             msgtext = """
             Hi Flatmate!
             Here's that link to get you started. Copy and paste this into your browser: 
@@ -72,13 +85,37 @@ class LogoutHandler(BaseHandler):
 class UserHandler(BaseHandler):
     @tornado.web.authenticated
     def get(self):
-        u = get_user_by_username(self.get_current_user())
-        self.write(tornado.escape.json_encode(u))
+        Session = sessionmaker(engine)
+        session = Session()
+        u = session.query(User).filter(User.username==self.get_current_user()).first()
+        b = session.query(Building).filter(Building.id==u.buildingid).first()
+        if u:
+            user = {
+            'firstname': u.firstname, 
+            'lastname': u.lastname,
+            'username': u.username,
+            'roomcode': b.buildingcode + '/' + str(u.roomnumber) if u.buildingid else None,
+            'biography': u.biography,
+            'facebookurl': u.facebookurl,
+            'flat': u.flat,
+            }
+            self.write(json_encode({'status': 0, 'response': user}))
+        else:
+            self.write(json_encode({'status': 1, 'response': ''}))
 
     @tornado.web.authenticated
     def post(self):
-        user = {'firstname': self.get_argument("firstname"), 'lastname': self.get_argument("lastname"), 'buildingid': self.get_argument("buildingid"), 'roomnumber': self.get_argument("roomnumber"), 'biography': self.get_argument("biography")}
-        set_user_by_username(self.get_current_user(), user)
+        Session = sessionmaker(engine)
+        session = Session()
+        u = session.query(User).filter(User.username==self.get_current_user()).first()
+        u.firstname = self.get_argument("firstname")
+        u.lastname = self.get_argument("lastname")
+        #u.buildingid = wat
+        #u.roomnumber = wat
+        u.biography = self.get_argument("biography")
+        u.facebookurl = self.get_argument("facebookurl")
+        u.flat = self.get_argument("flat")
+        session.commit()
 
 class FlatmatesHandler(BaseHandler):
     @tornado.web.authenticated
@@ -91,87 +128,27 @@ class BuildingHandler(BaseHandler):
         if self.get_argument("roomcode"):
             s = self.get_argument("roomcode").upper().split('/')
             buildingcode = s[0] + '/' + s[1]
-            self.write(tornado.escape.json_encode(get_building_by_code(buildingcode)))
+            Session = sessionmaker(engine)
+            session = Session()
+            b = session.query(Building).filter(Building.buildingcode==buildingcode).first()
+            if b:
+                building = {
+                    'buildingcode': b.buildingcode,
+                    'buildingname': b.buildingname,
+                    'collegeid': b.collegeid,
+                    'buildingtype': b.buildingtype,
+                    'numflats': b.numflats,
+                }
+                self.write(json_encode({'status': 0, 'response': building}))
+            else:
+                self.write(json_encode({'status': 1, 'response': ''}))
         else:
-            self.write(tornado.escape.json_encode({}))
+            self.write(json_encode({'status': 1, 'response': ''}))
 
 class MainHandler(BaseHandler):
     @tornado.web.authenticated
     def get(self):
         self.render('index.html')
-
-def get_verify(key):
-    cursor.execute("SELECT username, hash FROM verify WHERE key=%s", (key,))
-    try: 
-        f = cursor.fetchone() 
-    except ProgrammingError as e:
-        print e
-        return {}
-    else:
-        if f:
-            return dict(zip(('username', 'hash'), f))
-        else:
-            return {}
-
-def get_hash_by_username(username):
-    cursor.execute("SELECT hash FROM users WHERE username=%s", (username,))
-    try: 
-        hash = cursor.fetchone()
-    except ProgrammingError as e:
-        print e
-        return ''
-    else:
-        if hash:
-            return hash[0]
-        else:
-            return ''
-
-def get_user_by_username(username):
-    cursor.execute("SELECT users.username, users.firstname, users.lastname, colleges.collegename, buildings.buildingcode, users.roomnumber, users.facebookurl, users.biography FROM users, colleges, buildings WHERE users.username=%s AND colleges.collegeid=users.collegeid AND buildings.buildingid=users.buildingid", (username,))
-    try: 
-        f = cursor.fetchone() 
-    except ProgrammingError as e:
-        print e
-        return {}
-    else:
-        if f:
-            u = dict(zip(('username', 'firstname', 'lastname', 'collegename', 'buildingcode', 'roomnumber', 'facebookurl', 'biography'), f)) 
-            u['roomcode'] = u.pop('buildingcode') + '/' + str(u.pop('roomnumber'))
-            return u
-        else:
-            return {}
-
-def set_user_by_username(username, user):
-    r = user['roomcode'].split('/')
-    u = user['firstname'], user['lastname'], r[0] + '/' + r[1], r[2], user['facebookurl'], user['biography']
-    cursor.execute("UPDATE users SET firstname = %s, lastname = %s, buildingid = %s, roomnumber = %s, facebookurl = %s, biography = %s", u)
-
-
-def get_building_by_id(buildingid):
-    cursor.execute("SELECT buildings.buildingcode, buildings.buildingname, colleges.collegename, buildings.buildingtype, buildings.numflats FROM buildings, colleges WHERE buildings.buildingid=%s AND colleges.collegeid=buildings.collegeid", (buildingid,))
-    try: 
-        f = cursor.fetchone() 
-    except ProgrammingError as e:
-        print e
-        return {}
-    else:
-        if f:
-            return {'status': 0, 'response': dict(zip(('buildingcode','buildingname', 'collegename', 'buildingtype', 'numflats'), f))}
-        else:
-            return {'status': 1, 'response': {}}
-
-def get_building_by_code(buildingcode):
-    cursor.execute("SELECT buildings.buildingid, buildings.buildingname, colleges.collegename, buildings.buildingtype, buildings.numflats FROM buildings, colleges WHERE buildings.buildingcode=%s AND colleges.collegeid=buildings.collegeid", (buildingcode,))
-    try: 
-        f = cursor.fetchone() 
-    except ProgrammingError as e:
-        print e
-        return {'status': 1, response: {}}
-    else:
-        if f:
-            return {'status': 0, 'response': dict(zip(('buildingid', 'buildingname', 'collegename', 'buildingtype', 'numflats'), f))}
-        else:
-            return {'status': 1, 'response': {}}
 
 if __name__ == '__main__':
     settings = {
@@ -181,18 +158,8 @@ if __name__ == '__main__':
     }
     STATIC_PATH = os.path.join(os.path.dirname(__file__), 'static')
     
-    urlparse.uses_netloc.append("postgres")
-    url = urlparse.urlparse(os.environ["DATABASE_URL"])
-    conn = psycopg2.connect(
-        database=url.path[1:],
-        user=url.username,
-        password=url.password,
-        host=url.hostname,
-        port=url.port
-    )
-    conn.autocommit = True
+    engine = create_engine(os.environ["DATABASE_URL"])
     
-    cursor = conn.cursor()
     s = sendgrid.Sendgrid(os.environ["SENDGRID_USER"], os.environ["SENDGRID_PASS"], secure=True)
 
     application = tornado.web.Application([

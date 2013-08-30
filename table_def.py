@@ -20,19 +20,7 @@ class User(Base):
 	biography = Column(String)
 	facebookurl = Column(String)
 	flat = Column(Integer)
-
-	def __init__(self, username, firstname, lastname, collegeid, buildingid, 
-				roomnumber, pwhash, biography, facebookurl, flat):
-		self.username = username
-		self.firstname = firstname
-		self.lastname = lastname
-		self.collegeid = collegeid
-		self.buildingid = buildingid
-		self.roomnumber = roomnumber
-		self.pwhash = pwhash
-		self.biography = biography
-		self.facebookurl = facebookurl
-		self.flat = flat
+	signup = Column(DateTime)
 
 class College(Base):
 	__tablename__ = "colleges"
@@ -40,9 +28,6 @@ class College(Base):
 	collegename = Column(String)
 	users = relationship("User")
 	buildings = relationship("Building")
-
-	def __init__(self, collegename):
-		self.collegename = collegename
 
 class Building(Base):
 	__tablename__ = "buildings"
@@ -54,21 +39,10 @@ class Building(Base):
 	numflats = Column(Integer)
 	users = relationship("User")
 
-	def __init__(self, buildingcode, buildingname, collegeid, buildingtype, numflats):
-		self.buildingcode = buildingcode
-		self.buildingname = buildingname
-		self.collegeid = collegeid
-		self.buildingtype = buildingtype
-		self.numflats = numflats
-
 class ValidationLink(Base):
 	__tablename__ = "validationlinks"
 	id = Column(Integer, primary_key=True)
 	key = Column(String)
 	username = Column(String)
 	pwhash = Column(String)
-
-	def __init__(self, key, username, pwhash):
-		self.key = key
-		self.username = username
-		self.pwhash = pwhash
+	created = Column(DateTime)

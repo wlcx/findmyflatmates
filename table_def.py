@@ -39,8 +39,8 @@ class Building(Base):
     numflats = Column(Integer)
     users = relationship("User")
 
-class ValidationLink(Base):
-    __tablename__ = "validationlinks"
+class VerificationLink(Base):
+    __tablename__ = "verificationlinks"
     id = Column(Integer, primary_key=True)
     key = Column(String)
     username = Column(String)

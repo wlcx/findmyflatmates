@@ -96,6 +96,7 @@ class UserHandler(BaseHandler):
             'username': u.username,
             'roomcode': b.buildingcode + '/' + str(u.roomnumber) if u.buildingid else None,
             'biography': u.biography,
+            'college': u.collegeid,
             'facebookurl': u.facebookurl,
             'flat': u.flat,
             }

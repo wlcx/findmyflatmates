@@ -108,10 +108,34 @@ class UserHandler(BaseHandler):
         Session = sessionmaker(engine)
         session = Session()
         u = session.query(User).filter(User.username==self.get_current_user()).first()
+        b = session.query(Building).filter(Building.id==u.buildingid).first()
+        if u:
+            user = {
+            'firstname': u.firstname, 
+            'lastname': u.lastname,
+            'username': u.username,
+            'college': u.collegeid,
+            'roomcode': b.buildingcode + '/' + str(u.roomnumber) if u.buildingid else None,
+            'biography': u.biography,
+            'facebookurl': u.facebookurl,
+            'flat': u.flat,
+            }
+            self.write(json_encode({'status': 0, 'response': user}))
+        else:
+            self.write(json_encode({'status': 1, 'response': ''}))
+
+    @tornado.web.authenticated
+    def post(self):
+        Session = sessionmaker(engine)
+        session = Session()
+        roomcode = self.get_argument("roomcode").split('/')
+        u = session.query(User).filter(User.username==self.get_current_user()).first()
+        b = session.query(Building).filter(Building.buildingcode==roomcode[0] + '/' + roomcode[1]).first()
         u.firstname = self.get_argument("firstname")
         u.lastname = self.get_argument("lastname")
-        #u.buildingid = wat
-        #u.roomnumber = wat
+        u.collegeid = self.get_argument("college")
+        u.buildingid = b.id
+        u.roomnumber = int(roomcode[2])
         u.biography = self.get_argument("biography")
         u.facebookurl = self.get_argument("facebookurl")
         u.flat = self.get_argument("flat")

@@ -82,70 +82,20 @@ class LogoutHandler(BaseHandler):
         self.clear_cookie("FMF_auth")
         self.redirect('/', permanent=False)
 
-class UserHandler(BaseHandler):
-    @tornado.web.authenticated
-    def get(self):
-        Session = sessionmaker(engine)
-        session = Session()
-        u = session.query(User).filter(User.username==self.get_current_user()).first()
-        b = session.query(Building).filter(Building.id==u.buildingid).first()
-        if u:
-            user = {
-            'firstname': u.firstname, 
-            'lastname': u.lastname,
-            'username': u.username,
-            'roomcode': b.buildingcode + '/' + str(u.roomnumber) if u.buildingid else None,
-            'biography': u.biography,
-            'college': u.collegeid,
-            'facebookurl': u.facebookurl,
-            'flat': u.flat,
-            }
-            self.write(json_encode({'status': 0, 'response': user}))
-        else:
-            self.write(json_encode({'status': 1, 'response': ''}))
-
+class AboutHandler(BaseHandler):
     @tornado.web.authenticated
     def post(self):
         Session = sessionmaker(engine)
         session = Session()
         u = session.query(User).filter(User.username==self.get_current_user()).first()
-        b = session.query(Building).filter(Building.id==u.buildingid).first()
-        if u:
-            user = {
-            'firstname': u.firstname, 
-            'lastname': u.lastname,
-            'username': u.username,
-            'college': u.collegeid,
-            'roomcode': b.buildingcode + '/' + str(u.roomnumber) if u.buildingid else None,
-            'biography': u.biography,
-            'facebookurl': u.facebookurl,
-            'flat': u.flat,
-            }
-            self.write(json_encode({'status': 0, 'response': user}))
-        else:
-            self.write(json_encode({'status': 1, 'response': ''}))
-
-    @tornado.web.authenticated
-    def post(self):
-        Session = sessionmaker(engine)
-        session = Session()
-        roomcode = self.get_argument("roomcode").split('/')
-        u = session.query(User).filter(User.username==self.get_current_user()).first()
-        b = session.query(Building).filter(Building.buildingcode==roomcode[0] + '/' + roomcode[1]).first()
+        c = session.query(College).filter(College.collegename==self.get_argument("college")).first()
         u.firstname = self.get_argument("firstname")
         u.lastname = self.get_argument("lastname")
-        u.collegeid = self.get_argument("college")
-        u.buildingid = b.id
-        u.roomnumber = int(roomcode[2])
+        u.collegeid = c.id
         u.biography = self.get_argument("biography")
         u.facebookurl = self.get_argument("facebookurl")
-        u.flat = self.get_argument("flat")
+        u.twitterurl = self.get_argument("twitterurl")
         session.commit()
-
-class FlatmatesHandler(BaseHandler):
-    @tornado.web.authenticated
-    def get(self):
-        pass
 
 class BuildingHandler(BaseHandler):
     @tornado.web.authenticated
@@ -173,7 +123,31 @@ class BuildingHandler(BaseHandler):
 class MainHandler(BaseHandler):
     @tornado.web.authenticated
     def get(self):
-        self.render('index.html')
+        Session = sessionmaker(engine)
+        session = Session()
+        u = session.query(User).filter(User.username==self.get_current_user()).first()
+        f = session.query(User).filter(User.buildingid==u.buildingid).filter(User.flat==u.flat).filter(User.id!=u.id).all()
+        b = session.query(Building).filter(Building.id==u.buildingid).first()
+        c = session.query(College).all()
+        colleges = {}
+        for college in c:
+            colleges[college.id] = {
+                'collegeid': college.id,
+                'collegename': college.collegename,
+            }
+        user = {
+            'username': u.username,
+            'firstname': u.firstname,
+            'lastname': u.lastname,
+            'collegeid': u.collegeid,
+            'roomcode': b.buildingcode + '/' + str(u.roomnumber) if b and u.roomnumber else None,
+            'biography': u.biography,
+            'facebookurl': u.facebookurl,
+            'twitterurl': u.twitterurl,
+            'flat': u.flat,
+            'signup': u.signup,
+        }
+        self.render('index.html', flatmates=f, user=user, colleges=colleges, building=b)
 
 if __name__ == '__main__':
     settings = {
@@ -192,9 +166,8 @@ if __name__ == '__main__':
         (r"/logout", LogoutHandler),
         (r"/", MainHandler),
         (r"/verify", VerifyHandler),
-        (r"/users", UserHandler),
+        (r"/about", AboutHandler),
         (r"/buildings", BuildingHandler),
-        #(r"/flatmates", FlatmatesHandler),
         (r"/static/(.*)", tornado.web.StaticFileHandler, dict(path = STATIC_PATH)),
     ], **settings)
 

@@ -8,18 +8,20 @@
     <link href="./static/css/main.css" rel="stylesheet">
     <script src="./static/js/jquery-1.10.2.js"></script>
     <script src="./static/js/bootstrap.js"></script>
+    <script src="./static/js/jquery.validate.min.js"></script>
+    <script src="./static/js/jquery.form.js"></script>
     <script type="text/javascript">
       $(document).ready(function () {
         $.ajaxSetup({cache: false});
-        $("#btn-about-save").click(function() {
-          $.getJSON('buildings', {"roomcode": $("#roomcode").val(),}, function(data) {
-            console.log(data);
-            $("#flat").empty();
-            for(var i=1;i<data.numflats+1;i++) {
-              $("#flat").append("<option value=\"" + i +"\">" + i +"</option>")
-            };
-          });
         
+        $("#about-form").ajaxForm();
+
+        $("#btn-about-save").click(function() {
+          $("#about-form").ajaxSubmit();
+        });
+
+        $("#roomcode").change(function() {
+          console.log($("#roomcode").val())
         });
       });
     </script>
@@ -34,32 +36,38 @@
               <h3 class="panel-title">Flatmates</h3>
             </div>
             <div class="panel-body">
-              
+              {% if flatmates %}
+                <ul>
+                {% for f in flatmates %}
+                  <li>{{ escape(f.firstname) }} {{ escape(f.lastname) }}
+                    <ul>
+                      {% if f.facebookurl %}<li><a href="http://facebook.com/{{ escape(f.facebookurl) }}">Facebook</a></li>{% end %}
+                      {% if f.biography %}<li>{{ escape(f.biography) }}</li>{% end %}
+                      {% if f.twitterurl %}<li><a href="http://twitter.com/{{ escape(f.twitterurl) }}">Twitter</a></li>{% end %}
+                    </ul>
+                  </li>
+                {% end %}
+                </ul>
+              {% else %}
+                <p>Woo, you're the first! Relax. As soon as we find someone who's in your flat we'll drop you an email.</p>
+              {% end %}
             </div>
           </div>
         </div>
         <div class="col-lg-4">
           <div class="panel panel-default">
             <div class="panel-heading">
-              <h3 class="panel-title">About You</h3>
+              <h3 class="panel-title">Hi {{ user['firstname'] }}!</h3>
             </div>
             <div class="panel-body">
-              <strong>Tell us a bit about yourself.</strong>
+              <table>
+                {% if user['roomcode'] %}
+                  <tr><td>Room number: </td><td>{{ escape(user['roomcode']) }}</td>
+                {% end %}
+              </table>
             </div>
             <div class="panel-footer">
-              <a data-toggle="modal" href="#about-edit-modal" type="button" id="btn-about-edit" class="btn btn-primary btn-xs">Edit</a>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-lg-4">
-          <div class="panel panel-default">
-            <div class="panel-heading">
-              <h3 class="panel-title">Derp</h3>
-            </div>
-            <div class="panel-body">
-              <strong>Derp</strong>
+              <a data-toggle="modal" href="#about-edit-modal" type="button" id="btn-about-edit" class="btn btn-primary btn-xs">Edit About Me</a>
             </div>
           </div>
         </div>
@@ -75,52 +83,61 @@
             <h4 class="modal-title">About You</h4>
           </div>
           <div class="modal-body">
-            <h5>Fill in as much or as little as you want. But this is the whole point of doing this after all ;)</h5>
-            <form>
+            <form id="about-form" action="about" method="post">
               <div class="form-group">
                 <label for="names">Name</label>
                 <div id="names" class="form-inline">
                   <div class="form-group">
                     <label for="firstname" class="sr-only">First Name</label>
-                    <input id="firstname" class="form-control" type="text" placeholder="Firstname">
+                    <input name="firstname" id="firstname" class="form-control" type="text" placeholder="Firstname" {% if user['firstname'] %}value="{{ escape(user['firstname']) }}"{% end %}>
                   </div>
                   <div class="form-group">
                     <label for="lastname" class="sr-only">Last Name</label>
-                    <input id="lastname" class="form-control" type="text" placeholder="Lastname">
+                    <input name="lastname" id="lastname" class="form-control" type="text" placeholder="Lastname" {% if user['lastname'] %}value="{{ escape(user['lastname']) }}"{% end %}>
                   </div>
                 </div>
               </div>
               <div class="form-group">
                 <label for="college">College</label>
-                <select id="college" class="form-control">
-                  <option value="1">Alcuin</option>
-                  <option value="2">Derwent</option>
-                  <option value="3">Goodricke</option>
-                  <option value="4">Halifax</option>
-                  <option value="5">James</option>
-                  <option value="6">Langwith</option>
-                  <option value="7">Vanbrugh</option>
+                <select name="college" id="college" class="form-control">
+                  {% for c in colleges %}
+                    <option value="{{ colleges[c]['collegename'] }}" {% if colleges[c]['collegeid'] == user['collegeid'] %}selected="selected"{% end %}>{{ escape(colleges[c]['collegename']) }}</option>
+                  {% end %}
                 </select>
               </div>
+              <!--
               <div class="form-group">
                 <label for="roomcode">Room Number</label>
-                <input id="roomcode" class="form-control" type="text" placeholder="XXX/X/XXX">
+                <input name="roomcode" id="roomcode" class="form-control" type="text" placeholder="XXX/X/XXX" {% if user['roomcode'] %}value="{{ user['roomcode'] }}"{% end %}>
               </div>
+              {% if building and building.buildingtype=='flats' %}
               <div class="form-group">
                 <label for="flat">Flat Number</label>
-                <select id="flat" class="form-control">
+                <select name="flat" id="flat" class="form-control">
+                {% for x in range(building.numflats)%}
+                  <option value="{{ x }}">{{ x }}</option>
+                {% end %}
                 </select>
               </div>
+              {% end %}
+              -->
               <div class="form-group">
                 <label for="facebookurl">Facebook URL</label>
                 <div class="input-group">
                   <span class="input-group-addon">facebook.com/</span>
-                  <input id="facebookurl" class="form-control" type="text">
+                  <input name="facebookurl" id="facebookurl" class="form-control" type="text" {% if user['facebookurl'] %}value="{{ escape(user['facebookurl']) }}"{% end %}>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="twitterurl">Twitter URL</label>
+                <div class="input-group">
+                  <span class="input-group-addon">twitter.com/</span>
+                  <input name="twitterurl" id="twitterurl" class="form-control" type="text" {% if user['twitterurl'] %}value="{{ escape(user['twitterurl']) }}"{% end %}>
                 </div>
               </div>
               <div class="form-group">
                 <label for="biography">Introduce yourself</label>
-                <textarea id="biography" class="form-control" rows="4" placeholder="What's your favourite kind of tree? Do you photograph roundabouts in your spare time? Know any funny jokes about the French? Maybe you are French. That's the point of this box, I don't know"></textarea>
+                <textarea name="biography" id="biography" class="form-control" rows="4" placeholder="What's your favourite kind of tree? Do you photograph roundabouts in your spare time? Know any funny jokes about the French? Maybe you are French. That's the point of this box, I don't know">{% if user['biography'] %}{{ escape(user['biography']) }}{% end %}</textarea>
               </div>
             </form>
           </div>

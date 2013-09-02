@@ -19,6 +19,7 @@ class User(Base):
     pwhash = Column(String)
     biography = Column(String)
     facebookurl = Column(String)
+    twitterurl = Column(String)
     flat = Column(Integer)
     signup = Column(DateTime)
 

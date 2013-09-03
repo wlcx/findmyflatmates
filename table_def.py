@@ -22,6 +22,7 @@ class User(Base):
     twitterurl = Column(String)
     flat = Column(Integer)
     signup = Column(DateTime)
+    subject = Column(String)
 
 class College(Base):
     __tablename__ = "colleges"

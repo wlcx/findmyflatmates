@@ -147,6 +147,10 @@
                 </select>
               </div>
               <div class="form-group">
+                <label for="subject">What are you studying?</label>
+                <input name="subject" id="subject" class="form-control" type="text" {% if user['subject'] %}value="{{ escape(user['subject']) }}"{% end %}>
+              </div>
+              <div class="form-group">
                 <label for="facebookurl">Facebook URL</label>
                 <div class="input-group">
                   <span class="input-group-addon">facebook.com/</span>

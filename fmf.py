@@ -100,6 +100,7 @@ class AboutHandler(BaseHandler):
         u.biography = self.get_argument("biography")
         u.facebookurl = self.get_argument("facebookurl")
         u.twitterurl = self.get_argument("twitterurl")
+        u.subject = self.get_argument("subject")
         session.commit()
 
 class AccommodationHandler(BaseHandler):
@@ -163,6 +164,7 @@ class MainHandler(BaseHandler):
             'biography': u.biography,
             'facebookurl': u.facebookurl,
             'twitterurl': u.twitterurl,
+            'subject': u.subject,
             'flat': u.flat,
             'signup': u.signup,
         }

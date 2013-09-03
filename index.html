@@ -82,6 +82,8 @@
                   </li>
                 {% end %}
                 </ul>
+              {% elif not user['roomcode'] %}
+                <p>Hi there! Let's get started. Add your accomodation details by clicking on "Edit My Accommodation", and tell us a bit about yourself by clicking on "Edit About Me".</p>
               {% else %}
                 <p>Woo, you're the first! Relax. As soon as we find someone who's in your flat we'll drop you an email.</p>
               {% end %}

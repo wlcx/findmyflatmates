@@ -15,15 +15,49 @@
         $.ajaxSetup({cache: false});
         
         $("#about-form").ajaxForm();
+        $("#accom-form").ajaxForm();
 
         $("#btn-about-save").click(function() {
-          $("#about-form").ajaxSubmit();
+          $("#about-form").ajaxSubmit(function() {
+            displayAlert('#about-edit-modal-body', 'alert-success', 'Saved!');
+            setTimeout(function(){
+              location.reload(forceGet=true);
+            }, 1000);
+          });
+        });
+
+        $("#btn-accom-save").click(function () {
+          console.log("hurrrrrr");
+          $("#accom-form").ajaxSubmit(function() {
+            displayAlert('#accom-edit-modal-body', 'alert-success', 'Saved');
+            setTimeout(function(){
+              location.reload(forceGet=true);
+            }, 1000);
+          });
         });
 
         $("#roomcode").change(function() {
-          console.log($("#roomcode").val())
+          $.getJSON('/buildings', {roomcode:$("#roomcode").val()}, function(data) {
+            console.log(data);
+            if(data['response']['buildingtype'] == 'flats') {
+              $("#roomcode").parent().after('<div class="form-group"><label for="flat">Flat Number</label><select name="flat" id="flat" class="form-control"><option value="" disabled selected>Select a flat</option></select></div>');
+              for(var i=1;i<data.response.numflats+1;i++) {
+                $("#flat").append("<option value=\"" + i +"\">" + i +"</option>");
+              }
+            }
+            else {
+              $("#flat").parent().remove();
+            }
+          });
         });
       });
+
+      function displayAlert(parent, type, content) {
+        $(parent).prepend(
+          "<div class=\"alert "+ type + " fade in\">"
+          + content
+          + "<button type=\"button\" class=\"close\" data-dismiss=\"alert\">x</button></div>")
+      };
     </script>
   </head>
 
@@ -39,11 +73,11 @@
               {% if flatmates %}
                 <ul>
                 {% for f in flatmates %}
-                  <li>{{ escape(f.firstname) }} {{ escape(f.lastname) }}
+                  <li>{% if f.roomnumber %}Room {{ escape(str(f.roomnumber)) }} - {% end %}{{ escape(f.firstname) }} {{ escape(f.lastname) }}
                     <ul>
                       {% if f.facebookurl %}<li><a href="http://facebook.com/{{ escape(f.facebookurl) }}">Facebook</a></li>{% end %}
-                      {% if f.biography %}<li>{{ escape(f.biography) }}</li>{% end %}
                       {% if f.twitterurl %}<li><a href="http://twitter.com/{{ escape(f.twitterurl) }}">Twitter</a></li>{% end %}
+                      {% if f.biography %}<li>{{ escape(f.biography) }}</li>{% end %}
                     </ul>
                   </li>
                 {% end %}
@@ -64,10 +98,15 @@
                 {% if user['roomcode'] %}
                   <tr><td>Room number: </td><td>{{ escape(user['roomcode']) }}</td>
                 {% end %}
+                {% if user['flat'] %}
+                  <tr><td>Flat: </td><td>{{ escape(str(user['flat'])) }}</td>
+                {% end %}
               </table>
             </div>
             <div class="panel-footer">
               <a data-toggle="modal" href="#about-edit-modal" type="button" id="btn-about-edit" class="btn btn-primary btn-xs">Edit About Me</a>
+              <a data-toggle="modal" href="#accom-edit-modal" type="button" id="btn-accom-edit" class="btn btn-primary btn-xs">Edit My Accommodation</a>
+              <a href="./logout" type="button" class="btn btn-danger btn-xs">Logout</a>
             </div>
           </div>
         </div>
@@ -82,7 +121,7 @@
             <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
             <h4 class="modal-title">About You</h4>
           </div>
-          <div class="modal-body">
+          <div id="about-edit-modal-body" class="modal-body">
             <form id="about-form" action="about" method="post">
               <div class="form-group">
                 <label for="names">Name</label>
@@ -105,22 +144,6 @@
                   {% end %}
                 </select>
               </div>
-              <!--
-              <div class="form-group">
-                <label for="roomcode">Room Number</label>
-                <input name="roomcode" id="roomcode" class="form-control" type="text" placeholder="XXX/X/XXX" {% if user['roomcode'] %}value="{{ user['roomcode'] }}"{% end %}>
-              </div>
-              {% if building and building.buildingtype=='flats' %}
-              <div class="form-group">
-                <label for="flat">Flat Number</label>
-                <select name="flat" id="flat" class="form-control">
-                {% for x in range(building.numflats)%}
-                  <option value="{{ x }}">{{ x }}</option>
-                {% end %}
-                </select>
-              </div>
-              {% end %}
-              -->
               <div class="form-group">
                 <label for="facebookurl">Facebook URL</label>
                 <div class="input-group">
@@ -144,6 +167,40 @@
           <div class="modal-footer">
             <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             <button id="btn-about-save" type="button" class="btn btn-primary">Save changes</button>
+          </div>
+        </div><!-- /.modal-content -->
+      </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+    
+    <div class="modal fade" id="accom-edit-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h4 class="modal-title">Your Accommodation</h4>
+          </div>
+          <div id="accom-edit-modal-body" class="modal-body">
+            <form id="accom-form" action="accom" method="post">
+              <div class="form-group">
+                <label for="roomcode">Room Number</label>
+                <input name="roomcode" id="roomcode" class="form-control" type="text" placeholder="XXX/X/XXX" {% if user['roomcode'] %}value="{{ user['roomcode'] }}"{% end %}>
+              </div>
+              {% if building and building.buildingtype=='flats' %}
+              <div class="form-group">
+                <label for="flat">Flat Number</label>
+                <select name="flat" id="flat" class="form-control">
+                <option value="" disabled {% if not user["flat"] %}selected{% end %}>Select a flat</option>
+                {% for x in range(building.numflats)%}
+                  <option value="{{ x+1 }}" {% if user["flat"] == x+1 %} selected {% end %}>{{ x+1 }}</option>
+                {% end %}
+                </select>
+              </div>
+              {% end %}
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            <button id="btn-accom-save" type="button" class="btn btn-primary">Save changes</button>
           </div>
         </div><!-- /.modal-content -->
       </div><!-- /.modal-dialog -->

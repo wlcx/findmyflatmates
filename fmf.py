@@ -20,13 +20,13 @@ class VerifyHandler(tornado.web.RequestHandler):
         try:
             Session = sessionmaker(bind=engine)
             session = Session()
-            link = session.query(VerificationLink).filter(VerificationLink.key==self.get_argument("key")).first()
-            if res:
-                validated_user = User(username=link.username, pwhash=link.pwhash)
+            verif_link = session.query(VerificationLink).filter(VerificationLink.key==self.get_argument("key")).first()
+            if verif_link:
+                validated_user = User(username=verif_link.username, pwhash=verif_link.pwhash)
                 session.add(validated_user)
-                session.delete(link)
+                session.delete(verif_link)
                 session.commit()
-                self.set_secure_cookie("FMF_auth", v["username"])
+                self.set_secure_cookie("FMF_auth", verif_link.username)
                 self.redirect('/', permanent=False)
                 return
             else:
@@ -95,6 +95,20 @@ class AboutHandler(BaseHandler):
         u.biography = self.get_argument("biography")
         u.facebookurl = self.get_argument("facebookurl")
         u.twitterurl = self.get_argument("twitterurl")
+        session.commit()
+
+class AccommodationHandler(BaseHandler):
+    @tornado.web.authenticated
+    def post(self):
+        Session = sessionmaker(engine)
+        session = Session()
+        u = session.query(User).filter(User.username==self.get_current_user()).first()
+        roomcode = self.get_argument("roomcode").split('/')
+        #VALIDATION GOES HERE!
+        b = session.query(Building).filter(Building.buildingcode==roomcode[0] + '/' + roomcode[1]).first()
+        u.roomnumber = int(roomcode[2])
+        u.buildingid = b.id
+        u.flat = self.get_argument("flat") if b.buildingtype == 'flats' else None
         session.commit()
 
 class BuildingHandler(BaseHandler):
@@ -168,6 +182,7 @@ if __name__ == '__main__':
         (r"/verify", VerifyHandler),
         (r"/about", AboutHandler),
         (r"/buildings", BuildingHandler),
+        (r"/accom", AccommodationHandler),
         (r"/static/(.*)", tornado.web.StaticFileHandler, dict(path = STATIC_PATH)),
     ], **settings)
 

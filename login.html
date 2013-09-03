@@ -10,43 +10,49 @@
 
     <script type="text/javascript">
       $(document).ready(function () {
-        function displayAlert(type, content) {
-          $(".container").prepend(
-            "<div class=\"alert "+ type + " fade in\">"
-            + content
-            + "<button type=\"button\" class=\"close\" data-dismiss=\"alert\">x</button></div>")
-        };
+        
       }
+      function displayAlert(type, content) {
+        $(".container").prepend(
+          "<div class=\"alert "+ type + " fade in\">"
+          + content
+          + "<button type=\"button\" class=\"close\" data-dismiss=\"alert\">x</button></div>")
+      };
     </script>
   </head>
 
   <body>
     <div class="container">
-      <div class="col-sm-4 col-sm-offset-4">
-        <h1>Login</h1>
-        <br/>
-        {% if alert %}
-        <div class="alert {{ alerttype }}">
-          {{ alertmsg }}
+      <div class="row">
+        <div class="col-sm-4 col-sm-offset-4">
+          <h1>Login</h1>
+          <br/>
+          {% if alert %}
+          <div class="alert {{ alerttype }}">
+            {{ alertmsg }}
+          </div>
+          {% end %}
+          <form action="/login" method="post">
+            <fieldset>
+              <div class="input-group">
+                <input class="form-control" placeholder="Email address" id="email" type="text" name="email"/>
+                <span class="input-group-addon">@york.ac.uk</span>
+              </div>
+              <input class="form-control" placeholder="Password" id="password" type="password" name="password"/>
+              <br />
+              <div class="form-inline">  
+                <button type="submit" name="action" value="login" class="btn btn-success">Login</button>
+                <button type="submit" name="action" value="signup" class="btn btn-primary">Sign up</button>
+              </div>
+            </fieldset>
+          </form>
         </div>
-        {% end %}
-        <form action="/login" method="post">
-          <fieldset>
-            <div class="input-group">
-              <input class="form-control" placeholder="Email address" id="email" type="text" name="email"/>
-              <span class="input-group-addon">@york.ac.uk</span>
-            </div>
-            <input class="form-control" placeholder="Password" id="password" type="password" name="password"/>
-            <br />
-            <div class="form-inline">  
-              <button type="submit" name="action" value="login" class="btn btn-success">Login</button>
-              <button type="submit" name="action" value="signup" class="btn btn-primary">Sign up</button>
-            </div>
-          </fieldset>
-        </form>
       </div>
-      <div>
-        Made with <span class="glyphicon glyphicon-heart"></span> by <a href="http://twitter.com/willkers">@willkers</a>
+      <div class="row">
+        <div class="col-sm-4 col-sm-offset-4" style="text-align: center; margin-top: 20px;">
+        <p>Made with <span class="glyphicon glyphicon-heart"></span> by <a href="http://twitter.com/willkers">@willkers</a></p>
+        <p>Disclaimer: FindMyFlatmates is not endorsed/supported by The University of York.</p>
+        </div>
       </div>
     </div>
   </body>

@@ -22,18 +22,23 @@ class VerifyHandler(tornado.web.RequestHandler):
             session = Session()
             verif_link = session.query(VerificationLink).filter(VerificationLink.key==self.get_argument("key")).first()
             if verif_link:
-                validated_user = User(username=verif_link.username, pwhash=verif_link.pwhash)
-                session.add(validated_user)
-                session.delete(verif_link)
-                session.commit()
-                self.set_secure_cookie("FMF_auth", verif_link.username)
-                self.redirect('/', permanent=False)
-                return
+                #if link has expired
+                if verif_link.created + datetime.timedelta(days=1) < datetime.datetime.now():
+                    session.delete(verif_link)
+                    session.commit()
+                    self.render('login.html', alert=True, alerttype='alert-danger', alertmsg="That verification link has expired. Sign up again.")
+                else:
+                    validated_user = User(username=verif_link.username, pwhash=verif_link.pwhash)
+                    session.add(validated_user)
+                    session.delete(verif_link)
+                    session.commit()
+                    self.set_secure_cookie("FMF_auth", verif_link.username)
+                    self.redirect('/', permanent=False)
+                    return
             else:
                 self.render('login.html', alert=True, alerttype='alert-danger', alertmsg="That didn't seem to be a valid verification key. Try signing up again.")
         except tornado.web.MissingArgumentError:        
             self.render('login.html', alert=True, alerttype='alert-danger', alertmsg="That didn't seem to be a valid verification key. Try signing up again.")
-
 
 class LoginHandler(BaseHandler):
     def check_credentials(self, username, password):

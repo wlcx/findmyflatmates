@@ -37,6 +37,7 @@ class VerifyHandler(tornado.web.RequestHandler):
                     return
             else:
                 self.render('login.html', alert=True, alerttype='alert-danger', alertmsg="That didn't seem to be a valid verification key. Try signing up again.")
+            session.close()
         except tornado.web.MissingArgumentError:        
             self.render('login.html', alert=True, alerttype='alert-danger', alertmsg="That didn't seem to be a valid verification key. Try signing up again.")
 
@@ -45,6 +46,7 @@ class LoginHandler(BaseHandler):
         Session = sessionmaker(bind=engine)
         session = Session()
         res = session.query(User).filter(User.username==username).first()
+        session.close()
         if (res.pwhash):
             return bcrypt.hashpw(password, res.pwhash) == res.pwhash
         else:
@@ -71,6 +73,7 @@ class LoginHandler(BaseHandler):
             new_link = VerificationLink(key=key, username=self.get_argument("email"), pwhash=pwhash)
             session.add(new_link)
             session.commit()
+            session.close()
             msgtext = """
             Hi Flatmate!
             Here's that link to get you started. Copy and paste this into your browser: 
@@ -102,6 +105,7 @@ class AboutHandler(BaseHandler):
         u.twitterurl = self.get_argument("twitterurl")
         u.subject = self.get_argument("subject")
         session.commit()
+        session.close()
 
 class AccommodationHandler(BaseHandler):
     @tornado.web.authenticated
@@ -116,6 +120,7 @@ class AccommodationHandler(BaseHandler):
         u.buildingid = b.id
         u.flat = self.get_argument("flat") if b.buildingtype == 'flats' else None
         session.commit()
+        session.close()
 
 class BuildingHandler(BaseHandler):
     @tornado.web.authenticated
@@ -126,6 +131,7 @@ class BuildingHandler(BaseHandler):
             Session = sessionmaker(engine)
             session = Session()
             b = session.query(Building).filter(Building.buildingcode==buildingcode).first()
+            session.close()
             if b:
                 building = {
                     'buildingcode': b.buildingcode,
@@ -149,6 +155,7 @@ class MainHandler(BaseHandler):
         f = session.query(User).filter(User.buildingid==u.buildingid).filter(User.flat==u.flat).filter(User.id!=u.id).all()
         b = session.query(Building).filter(Building.id==u.buildingid).first()
         c = session.query(College).all()
+        session.close()
         colleges = {}
         for college in c:
             colleges[college.id] = {

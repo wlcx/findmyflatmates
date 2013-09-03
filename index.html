@@ -8,26 +8,67 @@
     <link href="./static/css/main.css" rel="stylesheet">
     <script src="./static/js/jquery-1.10.2.js"></script>
     <script src="./static/js/bootstrap.js"></script>
-    <script src="./static/js/jquery.validate.min.js"></script>
     <script src="./static/js/jquery.form.js"></script>
+    <script src="./static/js/jquery.validate.min.js"></script>
     <script type="text/javascript">
       $(document).ready(function () {
         $.ajaxSetup({cache: false});
         
         $("#about-form").ajaxForm();
         $("#accom-form").ajaxForm();
-
-        $("#btn-about-save").click(function() {
-          $("#about-form").ajaxSubmit(function() {
-            displayAlert('#about-edit-modal-body', 'alert-success', 'Saved!');
-            setTimeout(function(){
-              location.reload(forceGet=true);
-            }, 1000);
+        $.validator.addMethod('fburl', function(value) {
+          var re = /^[A-Za-z0-9\..]+$/
+          return re.test(value);
+        }, 'Not a valid Facebook address');
+        $.validator.addMethod('twurl', function(value) {
+          var re = /^[A-Za-z0-9_]{1,15}$/
+          return re.test(value);
+        }, 'Not a valid Twitter handle.');
+        $("#about-form").validate({
+            submitHandler: function() {
+              console.log('derp');
+              $("#about-form").ajaxSubmit(function() {
+                displayAlert('#about-edit-modal-body', 'alert-success', 'Saved!');
+                setTimeout(function(){
+                  location.reload(forceGet=true);
+                }, 1000);
+              });
+            },
+            invalidHandler: function() {
+              displayAlert('#about-edit-modal-body', 'alert-danger', 'Derp!');
+            },
+            errorPlacement: function(error, element) {
+              error.appendTo(element.closest(".form-group"))
+            },
+            rules: {
+              firstname: {
+                required: true,
+                maxlength: 35,
+              },
+              lastname: {
+                required: true,
+                maxlength: 35,
+              },
+              subject: {
+                maxlength: 30
+              },
+              facebookurl: {
+                fburl: true,
+              },
+              twitterurl: {
+                twurl: true,
+              },
+              biography: {
+                maxlength: 1000
+              },
+            },
           });
+        
+        $("#btn-about-save").click(function () {
+          $("#about-form").submit();
         });
-
+        
         $("#btn-accom-save").click(function () {
-          console.log("hurrrrrr");
           $("#accom-form").ajaxSubmit(function() {
             displayAlert('#accom-edit-modal-body', 'alert-success', 'Saved');
             setTimeout(function(){
@@ -126,46 +167,44 @@
           <div id="about-edit-modal-body" class="modal-body">
             <form id="about-form" action="about" method="post">
               <div class="form-group">
-                <label for="names">Name</label>
-                <div id="names" class="form-inline">
-                  <div class="form-group">
-                    <label for="firstname" class="sr-only">First Name</label>
-                    <input name="firstname" id="firstname" class="form-control" type="text" placeholder="Firstname" {% if user['firstname'] %}value="{{ escape(user['firstname']) }}"{% end %}>
-                  </div>
-                  <div class="form-group">
-                    <label for="lastname" class="sr-only">Last Name</label>
-                    <input name="lastname" id="lastname" class="form-control" type="text" placeholder="Lastname" {% if user['lastname'] %}value="{{ escape(user['lastname']) }}"{% end %}>
-                  </div>
+                <div class="form-group">
+                  <label for="firstname" class="control-label">First Name</label>
+                  <input name="firstname" id="firstname" class="form-control" type="text" placeholder="Firstname" {% if user['firstname'] %}value="{{ escape(user['firstname']) }}"{% end %}>
+                </div>
+                <div class="form-group">
+                  <label for="lastname" class="control-label">Last Name</label>
+                  <input name="lastname" id="lastname" class="form-control" type="text" placeholder="Lastname" {% if user['lastname'] %}value="{{ escape(user['lastname']) }}"{% end %}>
                 </div>
               </div>
               <div class="form-group">
-                <label for="college">College</label>
+                <label for="college" class="control-label">College</label>
                 <select name="college" id="college" class="form-control">
+                  <option value="" disabled {% if not user["collegeid"] %}selected{% end %}>Select a college</option>
                   {% for c in colleges %}
                     <option value="{{ colleges[c]['collegename'] }}" {% if colleges[c]['collegeid'] == user['collegeid'] %}selected="selected"{% end %}>{{ escape(colleges[c]['collegename']) }}</option>
                   {% end %}
                 </select>
               </div>
               <div class="form-group">
-                <label for="subject">What are you studying?</label>
+                <label for="subject" class="control-label">What are you studying?</label>
                 <input name="subject" id="subject" class="form-control" type="text" {% if user['subject'] %}value="{{ escape(user['subject']) }}"{% end %}>
               </div>
               <div class="form-group">
-                <label for="facebookurl">Facebook URL</label>
+                <label for="facebookurl" class="control-label">Facebook URL</label>
                 <div class="input-group">
                   <span class="input-group-addon">facebook.com/</span>
                   <input name="facebookurl" id="facebookurl" class="form-control" type="text" {% if user['facebookurl'] %}value="{{ escape(user['facebookurl']) }}"{% end %}>
                 </div>
               </div>
               <div class="form-group">
-                <label for="twitterurl">Twitter URL</label>
+                <label for="twitterurl" class="control-label">Twitter handle</label>
                 <div class="input-group">
-                  <span class="input-group-addon">twitter.com/</span>
+                  <span class="input-group-addon">@</span>
                   <input name="twitterurl" id="twitterurl" class="form-control" type="text" {% if user['twitterurl'] %}value="{{ escape(user['twitterurl']) }}"{% end %}>
                 </div>
               </div>
               <div class="form-group">
-                <label for="biography">Introduce yourself</label>
+                <label for="biography" class="control-label">Introduce yourself</label>
                 <textarea name="biography" id="biography" class="form-control" rows="4" placeholder="What's your favourite kind of tree? Do you photograph roundabouts in your spare time? Know any funny jokes about the French? Maybe you are French. That's the point of this box, I don't know">{% if user['biography'] %}{{ escape(user['biography']) }}{% end %}</textarea>
               </div>
             </form>

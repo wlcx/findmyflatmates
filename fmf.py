@@ -144,7 +144,31 @@ class BuildingHandler(BaseHandler):
             else:
                 self.write(json_encode({'status': 1, 'response': ''}))
         else:
-            self.write(json_encode({'status': 1, 'response': ''}))
+            self.write(json_encode({'status': False, 'response': ''}))
+
+class ValidBuildingHandler(BaseHandler):
+    @tornado.web.authenticated
+    def get(self):
+        if self.get_argument("roomcode"):
+            s = self.get_argument("roomcode").upper().split('/')
+            buildingcode = s[0] + '/' + s[1]
+            Session = sessionmaker(engine)
+            session = Session()
+            b = session.query(Building).filter(Building.buildingcode==buildingcode).first()
+            session.close()
+            if b:
+                building = {
+                    'buildingcode': b.buildingcode,
+                    'buildingname': b.buildingname,
+                    'collegeid': b.collegeid,
+                    'buildingtype': b.buildingtype,
+                    'numunits': b.numunits,
+                }
+                self.write(json_encode(True))
+            else:
+                self.write(json_encode("Invalid building code."))
+        else:
+            self.write(json_encode(False))
 
 class MainHandler(BaseHandler):
     @tornado.web.authenticated
@@ -196,6 +220,7 @@ if __name__ == '__main__':
         (r"/verify", VerifyHandler),
         (r"/about", AboutHandler),
         (r"/buildings", BuildingHandler),
+        (r"/checkbuilding", ValidBuildingHandler),
         (r"/accom", AccommodationHandler),
         (r"/static/(.*)", tornado.web.StaticFileHandler, dict(path = STATIC_PATH)),
     ], **settings)

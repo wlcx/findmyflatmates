@@ -24,7 +24,11 @@
           var re = /^[A-Za-z0-9_]{1,15}$/
           return re.test(value);
         }, 'Not a valid Twitter handle.');
-        $("#about-form").validate({
+        $.validator.addMethod('roomno', function(value) {
+          var re = /^[A-Za-z]{1,3}\/[A-Za-z0-9]+\/[0-9]+$/
+          return re.test(value);
+        }, 'Not a valid room number');
+          $("#about-form").validate({
             submitHandler: function() {
               console.log('derp');
               $("#about-form").ajaxSubmit(function() {
@@ -68,20 +72,43 @@
           $("#about-form").submit();
         });
         
+
+        $("#accom-form").validate({
+          submitHandler: function() {
+            $("#accom-form").ajaxSubmit(function() {
+              displayAlert('#accom-edit-modal-body', 'alert-success', 'Saved');
+              setTimeout(function(){
+                location.reload(forceGet=true);
+              }, 1000);
+            });
+          },
+          invalidHandler: function() {
+            displayAlert('#accom-edit-modal-body', 'alert-danger', 'Derp!');
+          },
+          errorPlacement: function(error, element) {
+            error.appendTo(element.closest(".form-group"))
+          },
+          rules: {
+            roomcode: {
+              required: true,
+              roomno: true,
+              remote: '/checkbuilding',
+            },
+          },
+          messages: {
+            //roomcode: "Not a valid room number :("
+          },
+        });
+        
         $("#btn-accom-save").click(function () {
-          $("#accom-form").ajaxSubmit(function() {
-            displayAlert('#accom-edit-modal-body', 'alert-success', 'Saved');
-            setTimeout(function(){
-              location.reload(forceGet=true);
-            }, 1000);
-          });
+            $("#accom-form").submit();
         });
 
         $("#roomcode").change(function() {
           $.getJSON('/buildings', {roomcode:$("#roomcode").val()}, function(data) {
             console.log(data);
-            if((data['response']['buildingtype'] == 'flats' || data['response']['buildingtype'] == 'house') && data['response']['numunits'] > 1)) {
-              $("#roomcode").parent().after('<div class="form-group"><label for="unitnumber">Flat/house Number</label><select name="unitnumber" id="unitnumber" class="form-control"><option value="" disabled selected>Select a flat/house</option></select></div>');
+            if((data['response']['buildingtype'] == 'flats' || data['response']['buildingtype'] == 'house') && data['response']['numunits'] > 1) {
+              $("#roomcode").parent().after('<div class="form-group"><label for="unitnumber">Flat or house Number</label><select name="unitnumber" id="unitnumber" class="form-control"><option value="" disabled selected>Select a flat or house</option></select></div>');
               for(var i=1;i<data.response.numunits+1;i++) {
                 $("#unitnumber").append("<option value=\"" + i +"\">" + i +"</option>");
               }
@@ -91,8 +118,8 @@
             }
           });
         });
-      });
 
+      });
       function displayAlert(parent, type, content) {
         $(parent).prepend(
           "<div class=\"alert "+ type + " fade in\">"

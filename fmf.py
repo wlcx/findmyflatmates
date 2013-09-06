@@ -138,7 +138,7 @@ class BuildingHandler(BaseHandler):
                     'buildingname': b.buildingname,
                     'collegeid': b.collegeid,
                     'buildingtype': b.buildingtype,
-                    'numflats': b.numflats,
+                    'numunits': b.numunits,
                 }
                 self.write(json_encode({'status': 0, 'response': building}))
             else:

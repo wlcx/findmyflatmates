@@ -80,14 +80,14 @@
         $("#roomcode").change(function() {
           $.getJSON('/buildings', {roomcode:$("#roomcode").val()}, function(data) {
             console.log(data);
-            if(data['response']['buildingtype'] == 'flats') {
-              $("#roomcode").parent().after('<div class="form-group"><label for="flat">Flat Number</label><select name="flat" id="flat" class="form-control"><option value="" disabled selected>Select a flat</option></select></div>');
-              for(var i=1;i<data.response.numflats+1;i++) {
-                $("#flat").append("<option value=\"" + i +"\">" + i +"</option>");
+            if((data['response']['buildingtype'] == 'flats' || data['response']['buildingtype'] == 'house') && data['response']['numunits'] > 1)) {
+              $("#roomcode").parent().after('<div class="form-group"><label for="unitnumber">Flat/house Number</label><select name="unitnumber" id="unitnumber" class="form-control"><option value="" disabled selected>Select a flat/house</option></select></div>');
+              for(var i=1;i<data.response.numunits+1;i++) {
+                $("#unitnumber").append("<option value=\"" + i +"\">" + i +"</option>");
               }
             }
             else {
-              $("#flat").parent().remove();
+              $("#unitnumber").parent().remove();
             }
           });
         });
@@ -141,8 +141,8 @@
                 {% if user['roomcode'] %}
                   <tr><td>Room number: </td><td>{{ escape(user['roomcode']) }}</td>
                 {% end %}
-                {% if user['flat'] %}
-                  <tr><td>Flat: </td><td>{{ escape(str(user['flat'])) }}</td>
+                {% if user['unitnumber'] %}
+                  <tr><td>Flat/house: </td><td>{{ escape(str(user['unitnumber'])) }}</td>
                 {% end %}
               </table>
             </div>
@@ -230,13 +230,13 @@
                 <label for="roomcode">Room Number</label>
                 <input name="roomcode" id="roomcode" class="form-control" type="text" placeholder="XXX/X/XXX" {% if user['roomcode'] %}value="{{ user['roomcode'] }}"{% end %}>
               </div>
-              {% if building and building.buildingtype=='flats' %}
+              {% if building and (building.buildingtype=='flat' or building.buildingtype=='house') %}
               <div class="form-group">
-                <label for="flat">Flat Number</label>
-                <select name="flat" id="flat" class="form-control">
-                <option value="" disabled {% if not user["flat"] %}selected{% end %}>Select a flat</option>
-                {% for x in range(building.numflats)%}
-                  <option value="{{ x+1 }}" {% if user["flat"] == x+1 %} selected {% end %}>{{ x+1 }}</option>
+                <label for="unitnumber">Flat Number</label>
+                <select name="unitnumber" id="unitnumber" class="form-control">
+                <option value="" disabled {% if not user["unitnumber"] %}selected{% end %}>Select a flat/house</option>
+                {% for x in range(building.numunits)%}
+                  <option value="{{ x+1 }}" {% if user["unitnumber"] == x+1 %} selected {% end %}>{{ x+1 }}</option>
                 {% end %}
                 </select>
               </div>

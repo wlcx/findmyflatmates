@@ -20,7 +20,7 @@ class User(Base):
     biography = Column(String)
     facebookurl = Column(String)
     twitterurl = Column(String)
-    flat = Column(Integer)
+    unitnumber = Column(Integer)
     signup = Column(DateTime)
     subject = Column(String)
 
@@ -38,8 +38,9 @@ class Building(Base):
     buildingname = Column(String)
     collegeid = Column(Integer, ForeignKey("colleges.id"))
     buildingtype = Column(String)
-    numflats = Column(Integer)
+    numunits = Column(Integer)
     users = relationship("User")
+    numrooms = Column(Integer)
 
 class VerificationLink(Base):
     __tablename__ = "verificationlinks"

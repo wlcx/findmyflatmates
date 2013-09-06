@@ -118,7 +118,7 @@ class AccommodationHandler(BaseHandler):
         b = session.query(Building).filter(Building.buildingcode==roomcode[0] + '/' + roomcode[1]).first()
         u.roomnumber = int(roomcode[2])
         u.buildingid = b.id
-        u.flat = self.get_argument("flat") if b.buildingtype == 'flats' else None
+        u.unitnumber = self.get_argument("unitnumber")
         session.commit()
         session.close()
 
@@ -152,7 +152,7 @@ class MainHandler(BaseHandler):
         Session = sessionmaker(engine)
         session = Session()
         u = session.query(User).filter(User.username==self.get_current_user()).first()
-        f = session.query(User).filter(User.buildingid==u.buildingid).filter(User.flat==u.flat).filter(User.id!=u.id).all()
+        f = session.query(User).filter(User.buildingid==u.buildingid).filter(User.unitnumber==u.unitnumber).filter(User.id!=u.id).all()
         b = session.query(Building).filter(Building.id==u.buildingid).first()
         c = session.query(College).all()
         session.close()
@@ -172,7 +172,7 @@ class MainHandler(BaseHandler):
             'facebookurl': u.facebookurl,
             'twitterurl': u.twitterurl,
             'subject': u.subject,
-            'flat': u.flat,
+            'unitnumber': u.unitnumber,
             'signup': u.signup,
         }
         self.render('index.html', flatmates=f, user=user, colleges=colleges, building=b)

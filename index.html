@@ -230,7 +230,7 @@
                 <label for="roomcode">Room Number</label>
                 <input name="roomcode" id="roomcode" class="form-control" type="text" placeholder="XXX/X/XXX" {% if user['roomcode'] %}value="{{ user['roomcode'] }}"{% end %}>
               </div>
-              {% if building and (building.buildingtype=='flat' or building.buildingtype=='house') %}
+              {% if building and ((building.buildingtype == 'flat' or building.buildingtype == 'house') and building.numunits > 1) %}
               <div class="form-group">
                 <label for="unitnumber">Flat Number</label>
                 <select name="unitnumber" id="unitnumber" class="form-control">

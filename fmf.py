@@ -131,12 +131,14 @@ class BuildingHandler(BaseHandler):
             Session = sessionmaker(engine)
             session = Session()
             b = session.query(Building).filter(Building.buildingcode==buildingcode).first()
+            c = session.query(College).filter(College.id==b.collegeid).first()
             session.close()
             if b:
                 building = {
                     'buildingcode': b.buildingcode,
                     'buildingname': b.buildingname,
                     'collegeid': b.collegeid,
+                    'collegename': c.collegename,
                     'buildingtype': b.buildingtype,
                     'numunits': b.numunits,
                 }
@@ -155,18 +157,19 @@ class ValidBuildingHandler(BaseHandler):
             Session = sessionmaker(engine)
             session = Session()
             b = session.query(Building).filter(Building.buildingcode==buildingcode).first()
+            c = session.query(College).filter(College.id==b.collegeid).first()
             session.close()
             if b:
                 building = {
                     'buildingcode': b.buildingcode,
                     'buildingname': b.buildingname,
-                    'collegeid': b.collegeid,
+                    'collegename': c.collegename,
                     'buildingtype': b.buildingtype,
                     'numunits': b.numunits,
                 }
                 self.write(json_encode(True))
             else:
-                self.write(json_encode("Invalid building code."))
+                self.write(json_encode("That room does not exist."))
         else:
             self.write(json_encode(False))
 

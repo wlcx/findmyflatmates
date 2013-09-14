@@ -95,31 +95,46 @@
               remote: '/checkbuilding',
             },
           },
-          messages: {
-            //roomcode: "Not a valid room number :("
-          },
         });
         
         $("#btn-accom-save").click(function () {
             $("#accom-form").submit();
         });
-
-        $("#roomcode").change(function() {
+        
+        $("#roomcode").keyup(debounce(function() {
           $.getJSON('/buildings', {roomcode:$("#roomcode").val()}, function(data) {
             console.log(data);
-            if((data['response']['buildingtype'] == 'flats' || data['response']['buildingtype'] == 'house') && data['response']['numunits'] > 1) {
-              $("#roomcode").parent().after('<div class="form-group"><label for="unitnumber">Flat or house Number</label><select name="unitnumber" id="unitnumber" class="form-control"><option value="" disabled selected>Select a flat or house</option></select></div>');
-              for(var i=1;i<data.response.numunits+1;i++) {
-                $("#unitnumber").append("<option value=\"" + i +"\">" + i +"</option>");
+            if(data['status'] == 0) {
+              $("#accomstring").html(data['response']['collegename'] + ' College, ' + data['response']['buildingname']);
+              if((data['response']['buildingtype'] == 'flats' || data['response']['buildingtype'] == 'house') && data['response']['numunits'] > 1) {
+                $("#roomcode").parent().after('<div class="form-group"><label for="unitnumber">Flat or house Number</label><select name="unitnumber" id="unitnumber" class="form-control"><option value="" disabled selected>Select a flat or house</option></select></div>');
+                for(var i=1;i<data.response.numunits+1;i++) {
+                  $("#unitnumber").append("<option value=\"" + i +"\">" + i +"</option>");
+                }
+              }
+              else {
+                $("#unitnumber").parent().remove();
               }
             }
             else {
-              $("#unitnumber").parent().remove();
+              console.log("not a real boy")
             }
+
           });
-        });
+        }, 500));
 
       });
+      function debounce(fn, delay) {
+        var timer = null;
+        return function () {
+          var context = this, args = arguments;
+          clearTimeout(timer);
+          timer = setTimeout(function () {
+            fn.apply(context, args);
+          }, delay);
+        };
+      }
+
       function displayAlert(parent, type, content) {
         $(parent).prepend(
           "<div class=\"alert "+ type + " fade in\">"
@@ -268,6 +283,10 @@
                 </select>
               </div>
               {% end %}
+              <div class="form-group">
+                <label for="accomstring">Your Room:</label>
+                <p id="accomstring"></p>
+              </div>
             </form>
           </div>
           <div class="modal-footer">

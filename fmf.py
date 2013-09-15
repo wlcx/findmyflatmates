@@ -69,16 +69,20 @@ class LoginHandler(BaseHandler):
             else:
                 self.render('login.html', alert=True, alerttype='alert-danger', alertmsg="Incorrect login details")
         elif self.get_argument("action") == "signup":
-            Session = sessionmaker(bind=engine)
-            session = Session()
-            pwhash = bcrypt.hashpw(self.get_argument("password"), bcrypt.gensalt())
-            key = ''.join(random.choice(string.ascii_letters + string.digits) for x in range(42))
-            new_link = VerificationLink(key=key, username=self.get_argument("email"), pwhash=pwhash, created=datetime.datetime.now())
-            session.add(new_link)
-            session.commit()
-            session.close()
-            q.enqueue(send_verification_email, self.get_argument('email'), key)
-            self.render('login.html', alert=True, alerttype='alert-success', alertmsg='We sent you an email to verify your account.')
+            validemail = re.match('^[A-Za-z0-9]+$', self.get_argument('email'))
+            if validemail:
+                Session = sessionmaker(bind=engine)
+                session = Session()
+                pwhash = bcrypt.hashpw(self.get_argument("password"), bcrypt.gensalt())
+                key = ''.join(random.choice(string.ascii_letters + string.digits) for x in range(42))
+                new_link = VerificationLink(key=key, username=self.get_argument("email"), pwhash=pwhash, created=datetime.datetime.now())
+                session.add(new_link)
+                session.commit()
+                session.close()
+                q.enqueue(send_verification_email, self.get_argument('email'), key)
+                self.render('login.html', alert=True, alerttype='alert-success', alertmsg='We sent you an email to verify your account.')
+            else:
+                self.render('login.html', alert=True, alerttype='alert-danger', alertmsg='Invalid email.')
 
 class LogoutHandler(BaseHandler):
     @tornado.web.authenticated

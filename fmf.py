@@ -8,10 +8,12 @@ import bcrypt
 import sendgrid
 import random, string
 import re
+from rq import Queue
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from table_def import User, Building, College, VerificationLink
-
+from worker import conn
+from utils import send_verification_email
 class BaseHandler(tornado.web.RequestHandler):
     def get_current_user(self):
         return self.get_secure_cookie("FMF_auth")
@@ -71,18 +73,11 @@ class LoginHandler(BaseHandler):
             session = Session()
             pwhash = bcrypt.hashpw(self.get_argument("password"), bcrypt.gensalt())
             key = ''.join(random.choice(string.ascii_letters + string.digits) for x in range(42))
-            new_link = VerificationLink(key=key, username=self.get_argument("email"), pwhash=pwhash)
+            new_link = VerificationLink(key=key, username=self.get_argument("email"), pwhash=pwhash, created=datetime.datetime.now())
             session.add(new_link)
             session.commit()
             session.close()
-            msgtext = """
-            Hi Flatmate!
-            Here's that link to get you started. Copy and paste this into your browser: 
-            findmyflatmates.co.uk/verify?key={0}
-            """.format(key)
-            message = sendgrid.Message("noreply@findmyflatmates.co.uk", "Welcome to FMF!", msgtext)
-            message.add_to(self.get_argument('email') + '@york.ac.uk')
-            s.smtp.send(message)
+            q.enqueue(send_verification_email, self.get_argument('email'), key)
             self.render('login.html', alert=True, alerttype='alert-success', alertmsg='We sent you an email to verify your account.')
 
 class LogoutHandler(BaseHandler):
@@ -233,8 +228,8 @@ if __name__ == '__main__':
     STATIC_PATH = os.path.join(os.path.dirname(__file__), 'static')
     
     engine = create_engine(os.environ["DATABASE_URL"])
-    
-    s = sendgrid.Sendgrid(os.environ["SENDGRID_USER"], os.environ["SENDGRID_PASS"], secure=True)
+
+    q = Queue('medium', connection=conn)
 
     application = tornado.web.Application([
         (r"/login", LoginHandler),

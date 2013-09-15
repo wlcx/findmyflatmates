@@ -67,11 +67,6 @@
               },
             },
           });
-        
-        $("#btn-about-save").click(function () {
-          $("#about-form").submit();
-        });
-        
 
         $("#accom-form").validate({
           submitHandler: function() {
@@ -94,35 +89,32 @@
               roomno: true,
               remote: '/checkbuilding',
             },
+            unitnumber: {
+              required: true,
+            },
           },
         });
-        
-        $("#btn-accom-save").click(function () {
-            $("#accom-form").submit();
-        });
-        
+
         $("#roomcode").keyup(debounce(function() {
-          $.getJSON('/buildings', {roomcode:$("#roomcode").val()}, function(data) {
-            console.log(data);
-            if(data['status'] == 0) {
-              $("#accomstring").html(data['response']['collegename'] + ' College, ' + data['response']['buildingname']);
-              if((data['response']['buildingtype'] == 'flats' || data['response']['buildingtype'] == 'house') && data['response']['numunits'] > 1) {
-                $("#roomcode").parent().after('<div class="form-group"><label for="unitnumber">Flat or house Number</label><select name="unitnumber" id="unitnumber" class="form-control"><option value="" disabled selected>Select a flat or house</option></select></div>');
-                for(var i=1;i<data.response.numunits+1;i++) {
-                  $("#unitnumber").append("<option value=\"" + i +"\">" + i +"</option>");
+          if($("#accom-form").valid()) {
+            $.getJSON('/buildings', {roomcode:$("#roomcode").val()}, function(data) {
+              console.log(data);
+              if(data['status'] == true) {
+                $("#accomstring").html(data['response']['collegename'] + ' College, ' + data['response']['buildingname']);
+                if((data['response']['buildingtype'] == 'flat' || data['response']['buildingtype'] == 'house') && data['response']['numunits'] > 1) {
+                  $("#unitnumber").parent().remove();
+                  $("#roomcode").parent().after('<div class="form-group"><label for="unitnumber">Flat or house Number</label><select name="unitnumber" id="unitnumber" class="form-control"><option value="" disabled selected>Select a flat or house</option></select></div>');
+                  for(var i=1;i<data.response.numunits+1;i++) {
+                    $("#unitnumber").append("<option value=\"" + i +"\">" + i +"</option>");
+                  }
+                }
+                else {
+                  $("#unitnumber").parent().remove();
                 }
               }
-              else {
-                $("#unitnumber").parent().remove();
-              }
-            }
-            else {
-              console.log("not a real boy")
-            }
-
-          });
+            });
+          }
         }, 500));
-
       });
       function debounce(fn, delay) {
         var timer = null;
@@ -206,8 +198,8 @@
             <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
             <h4 class="modal-title">About You</h4>
           </div>
-          <div id="about-edit-modal-body" class="modal-body">
-            <form id="about-form" action="about" method="post">
+          <form id="about-form" action="about" method="post">
+            <div id="about-edit-modal-body" class="modal-body">
               <div class="form-group">
                 <div class="form-group">
                   <label for="firstname" class="control-label">First Name</label>
@@ -249,12 +241,12 @@
                 <label for="biography" class="control-label">Introduce yourself</label>
                 <textarea name="biography" id="biography" class="form-control" rows="4" placeholder="What's your favourite kind of tree? Do you photograph roundabouts in your spare time? Know any funny jokes about the French? Maybe you are French. That's the point of this box, I don't know">{% if user['biography'] %}{{ escape(user['biography']) }}{% end %}</textarea>
               </div>
-            </form>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            <button id="btn-about-save" type="button" class="btn btn-primary">Save changes</button>
-          </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+              <button id="btn-about-save" type="submit" class="btn btn-primary">Save changes</button>
+            </div>
+          </form>
         </div><!-- /.modal-content -->
       </div><!-- /.modal-dialog -->
     </div><!-- /.modal -->
@@ -266,8 +258,8 @@
             <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
             <h4 class="modal-title">Your Accommodation</h4>
           </div>
-          <div id="accom-edit-modal-body" class="modal-body">
-            <form id="accom-form" action="accom" method="post">
+          <form id="accom-form" action="accom" method="post">
+            <div id="accom-edit-modal-body" class="modal-body">
               <div class="form-group">
                 <label for="roomcode">Room Number</label>
                 <input name="roomcode" id="roomcode" class="form-control" type="text" placeholder="XXX/X/XXX" {% if user['roomcode'] %}value="{{ user['roomcode'] }}"{% end %}>
@@ -287,12 +279,12 @@
                 <label for="accomstring">Your Room:</label>
                 <p id="accomstring"></p>
               </div>
-            </form>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            <button id="btn-accom-save" type="button" class="btn btn-primary">Save changes</button>
-          </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+              <button id="btn-accom-save" type="submit" class="btn btn-primary">Save changes</button>
+            </div>
+          </form>
         </div><!-- /.modal-content -->
       </div><!-- /.modal-dialog -->
     </div><!-- /.modal -->

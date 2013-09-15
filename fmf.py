@@ -7,6 +7,7 @@ import psycopg2, urlparse
 import bcrypt
 import sendgrid
 import random, string
+import re
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from table_def import User, Building, College, VerificationLink
@@ -110,41 +111,55 @@ class AboutHandler(BaseHandler):
 class AccommodationHandler(BaseHandler):
     @tornado.web.authenticated
     def post(self):
-        Session = sessionmaker(engine)
-        session = Session()
-        u = session.query(User).filter(User.username==self.get_current_user()).first()
-        roomcode = self.get_argument("roomcode").split('/')
-        #VALIDATION GOES HERE!
-        b = session.query(Building).filter(Building.buildingcode==roomcode[0] + '/' + roomcode[1]).first()
-        u.roomnumber = int(roomcode[2])
-        u.buildingid = b.id
-        u.unitnumber = self.get_argument("unitnumber")
-        session.commit()
-        session.close()
+        if self.get_argument("roomcode"):
+            match = re.match('^[A-Za-z]{1,3}\/[A-Za-z0-9]+\/[0-9]+$', self.get_argument('roomcode'))
+            if match:
+                Session = sessionmaker(engine)
+                session = Session()
+                u = session.query(User).filter(User.username==self.get_current_user()).first()
+                roomcode = self.get_argument("roomcode").split('/')
+                b = session.query(Building).filter(Building.buildingcode==roomcode[0] + '/' + roomcode[1]).first()
+                if b:
+                    u.roomnumber = int(roomcode[2])
+                    u.buildingid = b.id
+                    if b.buildingtype == 'flat' or b.buildingtype == 'house':
+                        u.unitnumber = self.get_argument("unitnumber")
+                    else:
+                        u.unitnumber = None
+                else:
+                    self.write(json_encode({'status': False, 'response': 'Invalid room code'}))
+                session.commit()
+                session.close()
+            else:
+                self.write(json_encode({'status': False, 'response': 'Invalid room code'}))
 
 class BuildingHandler(BaseHandler):
     @tornado.web.authenticated
     def get(self):
         if self.get_argument("roomcode"):
-            s = self.get_argument("roomcode").upper().split('/')
-            buildingcode = s[0] + '/' + s[1]
-            Session = sessionmaker(engine)
-            session = Session()
-            b = session.query(Building).filter(Building.buildingcode==buildingcode).first()
-            c = session.query(College).filter(College.id==b.collegeid).first()
-            session.close()
-            if b:
-                building = {
-                    'buildingcode': b.buildingcode,
-                    'buildingname': b.buildingname,
-                    'collegeid': b.collegeid,
-                    'collegename': c.collegename,
-                    'buildingtype': b.buildingtype,
-                    'numunits': b.numunits,
-                }
-                self.write(json_encode({'status': 0, 'response': building}))
+            match = re.match('^[A-Za-z]{1,3}\/[A-Za-z0-9]+\/[0-9]+$', self.get_argument('roomcode'))
+            if match:
+                s = self.get_argument("roomcode").upper().split('/')
+                buildingcode = s[0] + '/' + s[1]
+                Session = sessionmaker(engine)
+                session = Session()
+                b = session.query(Building).filter(Building.buildingcode==buildingcode).first()
+                c = session.query(College).filter(College.id==b.collegeid).first()
+                session.close()
+                if b:
+                    building = {
+                        'buildingcode': b.buildingcode,
+                        'buildingname': b.buildingname,
+                        'collegeid': b.collegeid,
+                        'collegename': c.collegename,
+                        'buildingtype': b.buildingtype,
+                        'numunits': b.numunits,
+                    }
+                    self.write(json_encode({'status': True, 'response': building}))
+                else:
+                    self.write(json_encode({'status': False, 'response': ''}))
             else:
-                self.write(json_encode({'status': 1, 'response': ''}))
+                self.write(json_encode({'status': False, 'response': 'Not a valid room code'}))
         else:
             self.write(json_encode({'status': False, 'response': ''}))
 
@@ -152,24 +167,29 @@ class ValidBuildingHandler(BaseHandler):
     @tornado.web.authenticated
     def get(self):
         if self.get_argument("roomcode"):
-            s = self.get_argument("roomcode").upper().split('/')
-            buildingcode = s[0] + '/' + s[1]
-            Session = sessionmaker(engine)
-            session = Session()
-            b = session.query(Building).filter(Building.buildingcode==buildingcode).first()
-            c = session.query(College).filter(College.id==b.collegeid).first()
-            session.close()
-            if b:
-                building = {
-                    'buildingcode': b.buildingcode,
-                    'buildingname': b.buildingname,
-                    'collegename': c.collegename,
-                    'buildingtype': b.buildingtype,
-                    'numunits': b.numunits,
-                }
-                self.write(json_encode(True))
+            match = re.match('^[A-Za-z]{1,3}\/[A-Za-z0-9]+\/[0-9]+$', self.get_argument('roomcode'))
+            if match:
+                s = self.get_argument("roomcode").upper().split('/')
+                buildingcode = s[0] + '/' + s[1]
+                Session = sessionmaker(engine)
+                session = Session()
+                b = session.query(Building).filter(Building.buildingcode==buildingcode).first()
+                if b:
+                    c = session.query(College).filter(College.id==b.collegeid).first()
+                session.close()
+                if b:
+                    building = {
+                        'buildingcode': b.buildingcode,
+                        'buildingname': b.buildingname,
+                        'collegename': c.collegename,
+                        'buildingtype': b.buildingtype,
+                        'numunits': b.numunits,
+                    }
+                    self.write(json_encode(True))
+                else:
+                    self.write(json_encode("That room does not exist."))
             else:
-                self.write(json_encode("That room does not exist."))
+                self.write(json_encode({'status': False, 'response': 'Not a valid room code'}))
         else:
             self.write(json_encode(False))
 

@@ -14,6 +14,7 @@ from sqlalchemy.orm import sessionmaker
 from table_def import User, Building, College, VerificationLink
 from worker import conn
 from utils import send_verification_email
+
 class BaseHandler(tornado.web.RequestHandler):
     def get_current_user(self):
         return self.get_secure_cookie("FMF_auth")
@@ -62,25 +63,41 @@ class LoginHandler(BaseHandler):
         self.render('login.html', alert=False)
 
     def post(self):
+        username = self.get_argument("email").lower()
+        password = self.get_argument("password")
         if self.get_argument("action") == 'login':
-            if self.check_credentials(self.get_argument("email"), self.get_argument("password")):
-                self.set_secure_cookie("FMF_auth", self.get_argument("email"))
-                self.redirect('/', permanent=False)
+            if username and password:
+                Session = sessionmaker(bind=engine)
+                session = Session()
+                res = session.query(User).filter(User.username==username).first()
+                session.close()
+                if res and self.check_credentials(username, self.get_argument("password")):
+                    self.set_secure_cookie("FMF_auth", username)
+                    self.redirect('/', permanent=False)
+                else:
+                    self.render('login.html', alert=True, alerttype='alert-danger', alertmsg="Incorrect login details")
             else:
-                self.render('login.html', alert=True, alerttype='alert-danger', alertmsg="Incorrect login details")
+                self.render('login.html', alert=True, alerttype='alert-danger', alertmsg="Enter a username and password.")
         elif self.get_argument("action") == "signup":
-            validemail = re.match('^[A-Za-z0-9]+$', self.get_argument('email'))
+            validemail = re.match('^[A-Za-z0-9]+$', username)
             if validemail:
                 Session = sessionmaker(bind=engine)
                 session = Session()
-                pwhash = bcrypt.hashpw(self.get_argument("password"), bcrypt.gensalt())
-                key = ''.join(random.choice(string.ascii_letters + string.digits) for x in range(42))
-                new_link = VerificationLink(key=key, username=self.get_argument("email"), pwhash=pwhash, created=datetime.datetime.now())
-                session.add(new_link)
-                session.commit()
+                res = session.query(User).filter(User.username==username).first() # check to see if the email is already registered
+                if not res:
+                    if len(password) >= 8:
+                        pwhash = bcrypt.hashpw(self.get_argument("password"), bcrypt.gensalt())
+                        key = ''.join(random.choice(string.ascii_letters + string.digits) for x in range(42))
+                        new_link = VerificationLink(key=key, username=username, pwhash=pwhash, created=datetime.datetime.now())
+                        session.add(new_link)
+                        session.commit()
+                        q.enqueue(send_verification_email, username, key)
+                        self.render('login.html', alert=True, alerttype='alert-success', alertmsg='We sent you an email to verify your account.')
+                    else:
+                        self.render('login.html', alert=True, alerttype='alert-danger', alertmsg='Your password must be at least 8 characters.')
+                else:
+                    self.render('login.html', alert=True, alerttype='alert-danger', alertmsg='That email has already been registered.')
                 session.close()
-                q.enqueue(send_verification_email, self.get_argument('email'), key)
-                self.render('login.html', alert=True, alerttype='alert-success', alertmsg='We sent you an email to verify your account.')
             else:
                 self.render('login.html', alert=True, alerttype='alert-danger', alertmsg='Invalid email.')
 

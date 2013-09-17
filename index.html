@@ -17,12 +17,22 @@
         $("#about-form").ajaxForm();
         $("#accom-form").ajaxForm();
         $.validator.addMethod('fburl', function(value) {
-          var re = /^[A-Za-z0-9\..]+$/
-          return re.test(value);
+          if(value != '') {
+            var re = /^[A-Za-z0-9\..]+$/
+            return re.test(value);
+          }
+          else {
+            return true;
+          }
         }, 'Not a valid Facebook address');
         $.validator.addMethod('twurl', function(value) {
-          var re = /^[A-Za-z0-9_]{1,15}$/
-          return re.test(value);
+          if(value != '') {
+            var re = /^[A-Za-z0-9_]{1,15}$/
+            return re.test(value);
+          }
+          else {
+            return true;
+          }
         }, 'Not a valid Twitter handle.');
         $.validator.addMethod('roomno', function(value) {
           var re = /^[A-Za-z]{1,3}\/[A-Za-z0-9]+\/[0-9]+$/
@@ -50,11 +60,10 @@
                 maxlength: 35,
               },
               lastname: {
-                required: true,
                 maxlength: 35,
               },
               subject: {
-                maxlength: 30
+                maxlength: 50
               },
               facebookurl: {
                 fburl: true,

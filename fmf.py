@@ -108,21 +108,54 @@ class LogoutHandler(BaseHandler):
         self.redirect('/', permanent=False)
 
 class AboutHandler(BaseHandler):
-    @tornado.web.authenticated
-    def post(self):
+    def validate_user(self, u):
         Session = sessionmaker(engine)
         session = Session()
-        u = session.query(User).filter(User.username==self.get_current_user()).first()
-        c = session.query(College).filter(College.collegename==self.get_argument("college")).first()
-        u.firstname = self.get_argument("firstname")
-        u.lastname = self.get_argument("lastname")
-        u.collegeid = c.id
-        u.biography = self.get_argument("biography")
-        u.facebookurl = self.get_argument("facebookurl")
-        u.twitterurl = self.get_argument("twitterurl")
-        u.subject = self.get_argument("subject")
-        session.commit()
+        colleges = session.query(College).all()
         session.close()
+        collegenames = []
+        for c in colleges:
+            collegenames.append(c.collegename)
+        if (
+            (len(u['firstname']) > 35) or
+            (len(u['lastname']) > 35) or
+            (not (u['collegename'] in collegenames)) or
+            (len(u['biography']) > 1000) or
+            (len(u['subject']) > 50) or
+            (not (re.match('^[A-Za-z0-9_]{1,15}$', u['twitterurl']) or u['twitterurl'] == '')) or
+            (not (re.match('^[A-Za-z0-9\..]+$', u['facebookurl']) or u['facebookurl'] == ''))
+        ):
+            return False
+        else:
+            return True
+
+    @tornado.web.authenticated
+    def post(self):
+        user = {
+            "firstname": self.get_argument("firstname"),
+            "lastname": self.get_argument("lastname"),
+            "collegename": self.get_argument("college"),
+            "twitterurl": self.get_argument("twitterurl"),
+            "facebookurl": self.get_argument("facebookurl"),
+            "subject": self.get_argument("subject"),
+            "biography": self.get_argument("biography"),
+        }
+        if self.validate_user(user):
+            Session = sessionmaker(engine)
+            session = Session()
+            u = session.query(User).filter(User.username==self.get_current_user()).first()
+            c = session.query(College).filter(College.collegename==user["collegename"]).first()
+            u.firstname = user["firstname"]
+            u.lastname = user["lastname"]
+            u.collegeid = c.id
+            u.biography = user["biography"]
+            u.facebookurl = user["facebookurl"]
+            u.twitterurl = user["twitterurl"]
+            u.subject = user["subject"]
+            session.commit()
+            session.close()
+        else:
+            self.write(json_encode({'status': False, 'response': 'fields failed validation'}))
 
 class AccommodationHandler(BaseHandler):
     @tornado.web.authenticated

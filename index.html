@@ -49,7 +49,7 @@
               });
             },
             invalidHandler: function() {
-              displayAlert('#about-edit-modal-body', 'alert-danger', 'Derp!');
+              displayAlert('#about-edit-modal-body', 'alert-danger', 'Please fix the errors below');
             },
             errorPlacement: function(error, element) {
               error.appendTo(element.closest(".form-group"))
@@ -61,6 +61,9 @@
               },
               lastname: {
                 maxlength: 35,
+              },
+              college: {
+                required: true,
               },
               subject: {
                 maxlength: 50
@@ -169,8 +172,11 @@
                   </li>
                 {% end %}
                 </ul>
+              
+              {% elif not user['firstname'] %}
+                <p>Hi there! Let's get started. Tell us a bit about yourself by clicking on "Edit About Me".</p>
               {% elif not user['roomcode'] %}
-                <p>Hi there! Let's get started. Add your accomodation details by clicking on "Edit My Accommodation", and tell us a bit about yourself by clicking on "Edit About Me".</p>
+                <p>Great! Now that we're aquainted, add your accomodation details by clicking on "Edit My Accommodation"<p>
               {% else %}
                 <p>Woo, you're the first! Relax. As soon as we find someone who's in your flat we'll drop you an email.</p>
               {% end %}
@@ -180,7 +186,7 @@
         <div class="col-lg-4">
           <div class="panel panel-default">
             <div class="panel-heading">
-              <h3 class="panel-title">Hi {{ user['firstname'] }}!</h3>
+              <h3 class="panel-title">Hi {% if user['firstname'] %}{{ escape(user['firstname']) }}{% else %}there{% end %}!</h3>
             </div>
             <div class="panel-body">
               <table>
@@ -194,7 +200,7 @@
             </div>
             <div class="panel-footer">
               <a data-toggle="modal" href="#about-edit-modal" type="button" id="btn-about-edit" class="btn btn-primary btn-xs">Edit About Me</a>
-              <a data-toggle="modal" href="#accom-edit-modal" type="button" id="btn-accom-edit" class="btn btn-primary btn-xs">Edit My Accommodation</a>
+              {% if user['firstname'] %}<a data-toggle="modal" href="#accom-edit-modal" type="button" id="btn-accom-edit" class="btn btn-primary btn-xs">Edit My Accommodation</a>{% end %}
               <a href="./logout" type="button" class="btn btn-danger btn-xs">Logout</a>
             </div>
           </div>

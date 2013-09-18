@@ -170,7 +170,13 @@ class AccommodationHandler(BaseHandler):
                 b = session.query(Building).filter(Building.buildingcode==roomcode[0] + '/' + roomcode[1]).first()
                 if b:
                     # Check whether this is a new flatmate. If so, notify the other flatmates!
-                    if (u.unitnumber != self.get_argument("unitnumber")) and (u.buildingid != b.id):
+                    if (b.buildingtype == 'flat' or b.buildingtype == 'house') and (u.unitnumber != self.get_argument("unitnumber")) and (u.buildingid != b.id):
+                        new_flatmate = True
+                    elif u.buildingid != b.id:
+                            new_flatmate = True
+                    else:
+                        new_flatmate = False
+                    if new_flatmate:
                         current_flatmates = session.query(User).filter(User.buildingid==b.id and User.unitnumber==self.get_argument("unitnumber")).all()
                         current_flatmate_emails = []
                         for f in current_flatmates:
@@ -202,7 +208,8 @@ class BuildingHandler(BaseHandler):
                 Session = sessionmaker(engine)
                 session = Session()
                 b = session.query(Building).filter(Building.buildingcode==buildingcode).first()
-                c = session.query(College).filter(College.id==b.collegeid).first()
+                if b:
+                    c = session.query(College).filter(College.id==b.collegeid).first()
                 session.close()
                 if b:
                     building = {

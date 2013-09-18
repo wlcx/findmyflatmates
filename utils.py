@@ -28,12 +28,13 @@ def delete_expired_verification_links():
     session.close()
 
 def send_new_flatmate_email(name, recipients):
-    s = sendgrid.Sendgrid(os.environ["SENDGRID_USER"], os.environ["SENDGRID_PASS"], secure=True)
-    msgtext = """
-            Hi Flatmate,
-            {0} has joined your flat! Log in and get in touch!
-            """.format(name)
-    message = sendgrid.Message("noreply@findmyflatmates.co.uk", "We've found you a new Flatmate!", msgtext)
-    for r in recipients:
-        message.add_to(r + '@york.ac.uk')
-    s.smtp.send(message)
+    if recipients:
+        s = sendgrid.Sendgrid(os.environ["SENDGRID_USER"], os.environ["SENDGRID_PASS"], secure=True)
+        msgtext = """
+                Hi Flatmate,
+                {0} has joined your flat! Log in and get in touch!
+                """.format(name)
+        message = sendgrid.Message("noreply@findmyflatmates.co.uk", "We've found you a new Flatmate!", msgtext)
+        for r in recipients:
+            message.add_to(r + '@york.ac.uk')
+        s.smtp.send(message)

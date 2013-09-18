@@ -13,7 +13,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from table_def import User, Building, College, VerificationLink
 from worker import conn
-from utils import send_verification_email
+from utils import send_verification_email, send_new_flatmate_email
 
 class BaseHandler(tornado.web.RequestHandler):
     def get_current_user(self):
@@ -169,12 +169,21 @@ class AccommodationHandler(BaseHandler):
                 roomcode = self.get_argument("roomcode").split('/')
                 b = session.query(Building).filter(Building.buildingcode==roomcode[0] + '/' + roomcode[1]).first()
                 if b:
+                    # Check whether this is a new flatmate. If so, notify the other flatmates!
+                    if (u.unitnumber != self.get_argument("unitnumber")) and (u.buildingid != b.id):
+                        current_flatmates = session.query(User).filter(User.buildingid==b.id and User.unitnumber==self.get_argument("unitnumber")).all()
+                        current_flatmate_emails = []
+                        for f in current_flatmates:
+                            if f.username:
+                                current_flatmate_emails.append(f.username)
+                        q.enqueue(send_new_flatmate_email, u.firstname, current_flatmate_emails)
+
                     u.roomnumber = int(roomcode[2])
                     u.buildingid = b.id
                     if b.buildingtype == 'flat' or b.buildingtype == 'house':
                         u.unitnumber = self.get_argument("unitnumber")
                     else:
-                        u.unitnumber = None
+                        u.unitnumber = None 
                 else:
                     self.write(json_encode({'status': False, 'response': 'Invalid room code'}))
                 session.commit()

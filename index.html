@@ -157,10 +157,11 @@
               {% if flatmates %}
                 <ul>
                 {% for f in flatmates %}
-                  <li>{% if f.roomnumber %}Room {{ escape(str(f.roomnumber)) }} - {% end %}{{ escape(f.firstname) }} {{ escape(f.lastname) }}
+                  <li>{% if f.roomnumber %}Room {{ escape(str(f.roomnumber)) }} - {% end %}{% if f.firstname %}{{ escape(f.firstname) }}{% else %}Name unknown{% end %} {% if f.lastname %}{{ escape(f.lastname) }}{% end %}
                     <ul>
                       {% if f.facebookurl %}<li><a href="http://facebook.com/{{ escape(f.facebookurl) }}">Facebook</a></li>{% end %}
                       {% if f.twitterurl %}<li><a href="http://twitter.com/{{ escape(f.twitterurl) }}">Twitter</a></li>{% end %}
+                      {% if f.subject %}<li>{{ escape(f.subject) }}</li>{% end %}
                       {% if f.biography %}<li>{{ escape(f.biography) }}</li>{% end %}
                     </ul>
                   </li>

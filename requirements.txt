@@ -1,6 +1,13 @@
 SQLAlchemy==0.8.2
+argparse==1.2.1
 psycopg2==2.5.1
 py-bcrypt==0.3
+python-dateutil==2.1
+pytz==2013d
+redis==2.8.0
+rq==0.3.11
 sendgrid==0.1.4
+six==1.4.1
+times==0.6.2
 tornado==3.1
 wsgiref==0.1.2

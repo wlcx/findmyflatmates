@@ -7,13 +7,42 @@
 
     <link href="./static/css/bootstrap.css" rel="stylesheet">
     <link href="./static/css/main.css" rel="stylesheet">
+    <script src="./static/js/jquery-1.10.2.js"></script>
     <script src="./static/js/jquery.form.js"></script>
     <script src="./static/js/jquery.validate.min.js"></script>
 
+    
     <script type="text/javascript">
       $(document).ready(function () {
-        $("#login-form").ajaxForm();
-      }
+        $.validator.addMethod('validemail', function(value) {
+          var re = /^[A-Za-z0-9]+$/
+          return re.test(value);
+        });
+        $("#login-form").validate({
+          errorPlacement: function(error, element) {
+            $('#password').after(error)
+          },
+          rules: {
+            email: {
+              required: true,
+              maxlength: 35,
+              validemail: true,
+            },
+            password: {
+              required: true,
+              minlength: 8,
+            },
+          },
+          messages: {
+            email: {
+              required: "An email address is required",
+              validemail: "Please enter a valid email",
+            },
+            password: "Please enter a password longer than 8 characters",
+          },
+        });
+      });
+
       function displayAlert(type, content) {
         $(".container").prepend(
           "<div class=\"alert "+ type + " fade in\">"
@@ -21,6 +50,7 @@
           + "<button type=\"button\" class=\"close\" data-dismiss=\"alert\">x</button></div>")
       };
     </script>
+    
   </head>
 
   <body>

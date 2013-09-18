@@ -1,0 +1,152 @@
+1,GBA/A1,Baker Court Block A1,3,flat,\N,\N
+2,GBA/A2,Baker Court Block A2,3,flat,\N,\N
+3,GDI/A,Dixon Court Block A,3,flat,\N,\N
+8,GSH/A1,Sheldon Court Block A1,3,flat,\N,\N
+9,GSH/A2,Sheldon Court Block A2,3,flat,\N,\N
+140,LBR/B,Brockbank Court Block B,6,flat,6,\N
+119,LHO/A,Horsfield Court Block A,6,flat,9,\N
+120,LHO/B,Horsfield Court Block B,6,flat,9,\N
+141,V/A,Le Page Court Block A,7,corridor,\N,50
+20,A/G,Block G,1,flat,6,\N
+21,A/H,Block H,1,flat,6,\N
+23,A/K,Block K,1,flat,6,\N
+24,A/L,Block L,1,flat,6,\N
+25,A/M,Block M,1,flat,8,\N
+27,A/P,Block P,1,flat,6,\N
+28,A/Q,Block Q,1,flat,8,\N
+108,J/C,Block C,5,house,3,\N
+19,A/F,Block F,1,flat,12,\N
+22,A/J,Block J,1,flat,12,\N
+18,A/E,Block E,1,house,3,\N
+106,J/A,Block A,5,house,3,\N
+112,J/G,Block G,5,flat,3,24
+109,J/D,Block D,5,house,3,\N
+110,J/E,Block E,5,house,2,\N
+111,J/F,Block F,5,house,3,48
+113,J/H,Block H,5,flat,3,27
+115,J/K,Block K,5,flat,6,48
+116,J/L,Block L,5,flat,6,48
+117,J/M,Block M,5,flat,6,36
+123,LTA/A3,West Taylor Court Block A House 3,6,house,1,8
+122,LTA/A2,West Taylor Court Block A House 2,6,house,1,8
+125,LTA/B,West Taylor Court Block B,6,flat,7,83
+126,LTA/C1,West Taylor Court Block C House 1,6,house,1,8
+118,G/C,Block N,5,corridor,\N,\N
+144,G/B,Eric Milner White Court Block B,7,corridor,\N,42
+46,HHI/B,Hickleton Court Block B,4,flat,\N,\N
+142,V/B,Le Page Court Block B,7,corridor,\N,24
+143,G/A,Eric Milner White Court Block A,7,corridor,\N,110
+47,HHI/C,Hickleton Court Block C,4,flat,\N,\N
+48,HHI/D,Hickleton Court Block D,4,flat,\N,\N
+130,LSM/A,Smith Court Block A,6,flat,11,\N
+49,HIN/A,Ingram Court House A,4,house,1,\N
+50,HIN/B,Ingram Court House B,4,house,1,\N
+51,HIN/C,Ingram Court House C,4,house,1,\N
+52,HIN/D,Ingram Court House D,4,house,1,\N
+53,HIN/E,Ingram Court House E,4,house,1,\N
+54,HIN/F,Ingram Court House F,4,house,1,\N
+56,HIN/H,Ingram Court House H,4,house,1,\N
+57,HIN/I,Ingram Court House I,4,house,1,\N
+58,HIN/J,Ingram Court House J,4,house,1,\N
+59,HIN/K,Ingram Court House K,4,house,1,\N
+61,HIR/B,Irwin Court House B,4,house,1,6
+62,HLI/A,Lindley Court House A,4,house,1,\N
+60,HIR/A,Irwin Court House A,4,house,1,6
+64,HLI/C,Lindley Court House C,4,house,1,\N
+65,HLI/D,Lindley Court House D,4,house,1,\N
+66,HLI/E,Lindley Court House E,4,house,1,\N
+67,HLI/F,Lindley Court House F,4,house,1,\N
+68,HLI/G,Lindley Court House G,4,house,1,\N
+69,HLI/H,Lindley Court House H,4,house,1,\N
+70,HLI/I,Lindley Court House I,4,house,1,\N
+71,HLI/J,Lindley Court House J,4,house,1,\N
+72,HLI/K,Lindley Court House K,4,house,1,\N
+75,HSL/C,St. Lawrence Court House C,4,house,1,20
+76,HSL/D,St. Lawrence Court House D,4,house,1,20
+77,HSL/E,St. Lawrence Court House E,4,house,1,20
+78,HSL/F,St. Lawrence Court House F,4,house,1,20
+79,HSL/G,St. Lawrence Court House G,4,house,1,20
+80,HSL/H,St. Lawrence Court House H,4,house,1,20
+81,HSL/I,St. Lawrence Court House I,4,house,1,20
+83,HSL/K,St. Lawrence Court House K,4,house,1,20
+84,HSL/L,St. Lawrence Court House L,4,house,1,20
+85,HSL/M,St. Lawrence Court House M,4,house,1,20
+86,HWO/A,Wood Court House A,4,house,1,\N
+74,HSL/B,St. Lawrence Court House B,4,house,1,20
+87,HWO/B,Wood Court House B,4,house,1,\N
+89,HWO/D,Wood Court House D,4,house,1,\N
+90,HWO/E,Wood Court House E,4,house,1,\N
+91,HWO/F,Wood Court House F,4,house,1,\N
+92,HWO/G,Wood Court House G,4,house,1,\N
+93,HWO/H,Wood Court House H,4,house,1,\N
+94,HWO/I,Wood Court House I,4,house,1,\N
+95,HWO/J,Wood Court House J,4,house,1,\N
+96,HWO/K,Wood Court House K,4,house,1,\N
+97,HWO/L,Wood Court House L,4,house,1,\N
+99,HYO/B,Younger Court House B,4,house,1,\N
+100,HYO/C,Younger Court House C,4,house,1,\N
+101,HYO/D,Younger Court House D,4,house,1,\N
+102,HYO/E,Younger Court House E,4,house,1,\N
+103,HYO/F,Younger Court House F,4,house,1,\N
+104,HYO/G,Younger Court House G,4,house,1,\N
+105,HYO/H,Younger Court House H,4,house,1,\N
+45,HHI/A,Hickleton Court Block A,4,flat,\N,\N
+29,D/A,Block A,2,corridor,\N,\N
+30,D/B,Block B,2,corridor,\N,\N
+31,D/C,Block C,2,corridor,\N,\N
+35,D/G ,Block G,2,house,2,\N
+33,D/E,Block E,2,house,2,\N
+34,D/F,Block F,2,house,3,\N
+37,D/J ,Block J,2,corridor,\N,\N
+36,D/H ,Block H,2,house,3,\N
+38,D/K ,Block K,2,corridor,\N,\N
+40,D/P ,Block P,2,corridor,\N,\N
+5,GDI/B2,Dixon Court Block B House B2,3,house,\N,\N
+6,GDI/B3,Dixon Court Block B House B3,3,house,\N,\N
+7,GDI/B4,Dixon Court Block B House B4,3,house,\N,\N
+4,GDI/B1,Dixon Court Block B House B1,3,house,\N,\N
+139,LBR/A,Brockbank Court Block A,6,flat,8,\N
+26,A/N,Block N,1,flat,6,\N
+107,J/B,Block B,5,house,3,\N
+114,J/J,Block J,5,flat,6,48
+73,HSL/A,St. Lawrence Court House A,4,house,1,20
+121,LTA/A1,West Taylor Court Block A House 1,6,house,1,6
+124,LTA/A4,West Taylor Court Block A House 4,6,house,1,8
+82,HSL/J,St. Lawrence Court House J,4,house,1,20
+88,HWO/C,Wood Court House C,4,house,1,\N
+98,HYO/A,Younger Court House A,4,house,1,\N
+127,LTA/C2,West Taylor Court Block C House 2,6,house,1,8
+128,LTA/C3,West Taylor Court Block C House 3,6,house,1,8
+129,LTA/C4,West Taylor Court Block C House 4,6,house,1,8
+131,LSM/B1,Smith Court Block B House 1,6,house,1,8
+132,LSM/B2,Smith Court Block B House 2,6,house,1,8
+133,LSM/B3,Smith Court Block B House 3,6,house,1,8
+134,LSM/B4,Smith Court Block B House 4,6,house,1,8
+135,LSM/C1,Smith Court Block C House 1,6,house,1,4
+136,LSM/C2,Smith Court Block C House 2,6,house,1,8
+137,LSM/C3,Smith Court Block C House 3,6,house,1,8
+138,LSM/C4,Smith Court Block C House 4,6,house,1,8
+145,G/D,Eric Milner White Court Block D,7,corridor,\N,92
+146,FX,Fairfax House,7,corridor,\N,\N
+147,VBA/A,Donald Barron Court House A,7,house,1,\N
+148,VBA/B,Donald Barron Court House B,7,house,1,\N
+149,VBA/C,Donald Barron Court House C,7,house,1,\N
+150,VSC/D,Barbara Scott Court House D,7,house,1,\N
+151,VSC/E,Barbara Scott Court House E,7,house,1,\N
+152,VSC/F,Barbara Scott Court House F,7,house,1,\N
+10,GSH/B1,Sheldon Court Block B House B1,3,house,1,8
+11,GSH/B2,Sheldon Court Block B House B2,3,house,1,8
+12,GSH/B3,Sheldon Court Block B House B3,3,house,1,8
+13,GSH/B4,Sheldon Court Block B House B4,3,house,1,8
+14,GSH/C1,Sheldon Court Block C House C1,3,house,1,8
+15,GSH/C2,Sheldon Court Block C House C2,3,house,1,8
+16,GSH/C3,Sheldon Court Block C House C3,3,house,1,8
+17,GSH/C4,Sheldon Court Block C House C4,3,house,1,8
+41,HAI/A,Ainsty Court Block A,4,flat,6,\N
+42,HAI/B,Ainsty Court Block B,4,flat,6,\N
+43,HAI/C,Ainsty Court Block C,4,flat,6,\N
+44,HAI/D,Ainsty Court Block D,4,flat,6,\N
+55,HIN/G,Ingram Court House G,4,house,1,\N
+63,HLI/B,Lindley Court House B,4,house,1,\N
+32,D/D,Block D,2,corridor,\N,\N
+39,D/M ,Block M,2,corridor,\N,\N

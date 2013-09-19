@@ -14,8 +14,6 @@
       $(document).ready(function () {
         $.ajaxSetup({cache: false});
         
-        $("#about-form").ajaxForm();
-        $("#accom-form").ajaxForm();
         $.validator.addMethod('fburl', function(value) {
           if(value != '') {
             var re = /^[A-Za-z0-9\..]+$/

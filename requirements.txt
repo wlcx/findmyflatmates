@@ -1,5 +1,6 @@
 SQLAlchemy==0.8.2
 argparse==1.2.1
+newrelic==2.0.0.1
 psycopg2==2.5.1
 py-bcrypt==0.3
 python-dateutil==2.1

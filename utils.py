@@ -3,7 +3,6 @@ import os
 import datetime
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from table_def import VerificationLink
 
 def send_verification_email(username, key):
     s = sendgrid.Sendgrid(os.environ["SENDGRID_USER"], os.environ["SENDGRID_PASS"], secure=True)
@@ -17,6 +16,7 @@ def send_verification_email(username, key):
     s.smtp.send(message)
 
 def delete_expired_verification_links():
+    from table_def import VerificationLink
     engine = create_engine(os.environ["DATABASE_URL"])
     Session = sessionmaker(engine)
     session = Session()

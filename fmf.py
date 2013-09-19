@@ -117,7 +117,7 @@ class AboutHandler(BaseHandler):
         for c in colleges:
             collegenames.append(c.collegename)
         if (
-            (len(u['firstname']) > 35) or
+            (len(u['firstname']) > 35) or (len(u['firstname']) == 0) or
             (len(u['lastname']) > 35) or
             (not (u['collegename'] in collegenames)) or
             (len(u['biography']) > 1000) or
@@ -170,19 +170,20 @@ class AccommodationHandler(BaseHandler):
                 b = session.query(Building).filter(Building.buildingcode==roomcode[0] + '/' + roomcode[1]).first()
                 if b:
                     # Check whether this is a new flatmate. If so, notify the other flatmates!
-                    if (b.buildingtype == 'flat' or b.buildingtype == 'house') and (u.unitnumber != self.get_argument("unitnumber")) and (u.buildingid != b.id):
+                    if (b.buildingtype == 'flat' or b.buildingtype == 'house') and ((u.unitnumber != self.get_argument("unitnumber")) or (u.buildingid != b.id)):
                         new_flatmate = True
-                    elif u.buildingid != b.id:
-                            new_flatmate = True
+                    #elif u.buildingid != b.id:
+                    #    new_flatmate = True
                     else:
                         new_flatmate = False
                     if new_flatmate:
-                        current_flatmates = session.query(User).filter(User.buildingid==b.id and User.unitnumber==self.get_argument("unitnumber")).all()
+                        current_flatmates = session.query(User).filter(User.id != u.id).filter(User.buildingid==b.id).filter(User.unitnumber==self.get_argument("unitnumber")).all()
                         current_flatmate_emails = []
                         for f in current_flatmates:
                             if f.username:
                                 current_flatmate_emails.append(f.username)
-                        q.enqueue(send_new_flatmate_email, u.firstname, current_flatmate_emails)
+                        if current_flatmate_emails:
+                            q.enqueue(send_new_flatmate_email, u.firstname, current_flatmate_emails)
 
                     u.roomnumber = int(roomcode[2])
                     u.buildingid = b.id
@@ -296,10 +297,10 @@ if __name__ == '__main__':
         "login_url": "/login",
     }
     STATIC_PATH = os.path.join(os.path.dirname(__file__), 'static')
-    
+
     engine = create_engine(os.environ["DATABASE_URL"])
 
-    q = Queue('medium', connection=conn)
+    q = Queue('default', connection=conn)
 
     application = tornado.web.Application([
         (r"/login", LoginHandler),
